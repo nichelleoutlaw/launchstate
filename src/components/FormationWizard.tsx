@@ -24,7 +24,6 @@ interface FormationWizardProps {
   updateLLCData: (data: Partial<LLCFormData>) => void;
   onGenerateDocs: () => void;
   onGoToTab: (tabId: string) => void;
-  onOpenAdvisorWithPrompt: (prompt: string) => void;
 }
 
 export const FormationWizard: React.FC<FormationWizardProps> = ({
@@ -32,7 +31,6 @@ export const FormationWizard: React.FC<FormationWizardProps> = ({
   updateLLCData,
   onGenerateDocs,
   onGoToTab,
-  onOpenAdvisorWithPrompt,
 }) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const selectedStateInfo = STATES_DATA[llcData.formationState] || STATES_DATA['TX'];
@@ -96,11 +94,11 @@ export const FormationWizard: React.FC<FormationWizardProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onOpenAdvisorWithPrompt(`Which state is best for my LLC: ${llcData.formationState} or Delaware / Wyoming?`)}
-              className="px-3.5 py-2 text-xs font-medium bg-slate-700/80 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg flex items-center gap-2 transition-colors"
+              onClick={() => onGoToTab('state-directory')}
+              className="px-3.5 py-2 text-xs font-semibold bg-slate-700/80 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>State Selection Advice</span>
+              <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+              <span>50-State Filing Fees Guide</span>
             </button>
           </div>
         </div>
@@ -198,13 +196,15 @@ export const FormationWizard: React.FC<FormationWizardProps> = ({
                   {llcData.businessName.trim() || '[Your Business Name]'} {llcData.suffix}
                 </span>
               </div>
-              <button
-                onClick={() => onOpenAdvisorWithPrompt(`Is the name "${llcData.businessName} ${llcData.suffix}" legally compliant and how should I check trademark and Secretary of State conflicts?`)}
+              <a
+                href={selectedStateInfo.statePortalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1"
               >
-                <Sparkles className="w-3 h-3" />
-                Check Name Rules
-              </button>
+                <ExternalLink className="w-3 h-3" />
+                <span>Check {selectedStateInfo.code} SOS Availability</span>
+              </a>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

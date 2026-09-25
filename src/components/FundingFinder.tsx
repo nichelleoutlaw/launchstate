@@ -3,7 +3,6 @@ import {
   Coins, 
   Search, 
   Filter, 
-  Sparkles, 
   ExternalLink, 
   CheckCircle2, 
   MapPin, 
@@ -12,7 +11,10 @@ import {
   TrendingUp,
   Award,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowRight,
+  ShieldCheck,
+  FileCheck
 } from 'lucide-react';
 import { LLCFormData, GrantItem } from '../types';
 import { GRANTS_DATA } from '../data/grantsData';
@@ -20,21 +22,17 @@ import { STATES_DATA } from '../data/statesData';
 
 interface FundingFinderProps {
   llcData: LLCFormData;
-  onOpenAdvisorWithPrompt: (prompt: string) => void;
+  onGoToBankResolutions?: () => void;
 }
 
 export const FundingFinder: React.FC<FundingFinderProps> = ({
   llcData,
-  onOpenAdvisorWithPrompt,
+  onGoToBankResolutions,
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [levelFilter, setLevelFilter] = useState<'all' | 'federal' | 'state' | 'city'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [expandedGrantId, setExpandedGrantId] = useState<string | null>(null);
-
-  // AI Grant Matcher State
-  const [isAiMatching, setIsAiMatching] = useState<boolean>(false);
-  const [aiMatchResult, setAiMatchResult] = useState<any | null>(null);
 
   const stateInfo = STATES_DATA[llcData.formationState] || STATES_DATA['TX'];
 
@@ -63,130 +61,87 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
     return true;
   });
 
-  // Run AI Grant Evaluation
-  const runAiGrantMatch = async () => {
-    setIsAiMatching(true);
-    try {
-      const res = await fetch('/api/ai/grant-match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessName: `${llcData.businessName} ${llcData.suffix}`,
-          state: stateInfo.name,
-          city: llcData.officeCity,
-          industry: llcData.industry,
-          description: llcData.businessDescription,
-          fundingNeed: '75,000',
-        }),
-      });
-      const data = await res.json();
-      setAiMatchResult(data);
-    } catch (e) {
-      console.error('Failed to run AI grant match', e);
-    } finally {
-      setIsAiMatching(false);
-    }
-  };
+  // Calculate high priority programs for this state
+  const stateGrantsCount = GRANTS_DATA.filter((g) => g.state === stateInfo.code || g.level === 'federal').length;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
+      <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 sm:p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 mb-1">
-              <span>NON-DILUTIVE CAPITAL DISCOVERY</span>
+              <span>STEP 3: CAPITAL & GROWTH</span>
               <span>·</span>
-              <span>CITY, STATE & FEDERAL</span>
+              <span>NON-DILUTIVE STATE & FEDERAL GRANTS</span>
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">
-              Small Business Grants & Funding Finder
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+              <Coins className="w-7 h-7 text-emerald-400" />
+              <span>Small Business Grants Engine</span>
             </h1>
-            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Discover verified government grants, innovation awards, and regional economic incentives that provide non-repayable capital for your new LLC.
+            <p className="text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Explore verified government grants, SBIR/STTR innovation awards, and regional economic development programs providing non-repayable capital for <strong className="text-white">{llcData.businessName || 'your LLC'}</strong> in <strong className="text-white">{stateInfo.name}</strong>.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={runAiGrantMatch}
-              disabled={isAiMatching}
-              className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-950/40 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-200 animate-pulse" />
-              <span>{isAiMatching ? 'Analyzing Business Profile...' : 'AI Grant Matcher'}</span>
-            </button>
+            {onGoToBankResolutions && (
+              <button
+                onClick={onGoToBankResolutions}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
+              >
+                <span>Continue to Bank Resolutions</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* AI Grant Matcher Results Panel */}
-      {aiMatchResult && (
-        <div className="p-5 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/40 rounded-2xl space-y-4 shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold font-mono">
-                {aiMatchResult.readinessScore || 85}
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  Grant Readiness Evaluation for {llcData.businessName}
-                </h3>
-                <span className="text-[11px] text-emerald-400">
-                  Readiness Score: {aiMatchResult.readinessScore || 85}/100 · High Alignment
-                </span>
-              </div>
+      {/* Grant Application Readiness & Qualification Matrix */}
+      <div className="p-6 bg-slate-800/60 border border-slate-700/80 rounded-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-700/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold font-mono text-sm">
+              95
             </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">
+                Grant Eligibility Matrix for {llcData.businessName || 'Your Business'}
+              </h3>
+              <span className="text-[11px] text-emerald-400 font-mono">
+                Jurisdiction: {stateInfo.name} ({stateInfo.code}) · Formed Entity Advantage
+              </span>
+            </div>
+          </div>
+          <span className="text-xs text-slate-400 font-mono">
+            {stateGrantsCount} Qualified Programs
+          </span>
+        </div>
 
-            <button
-              onClick={() => onOpenAdvisorWithPrompt(`Help me draft an executive pitch summary and commercialization plan for grant applications for my LLC "${llcData.businessName}" in ${llcData.industry}.`)}
-              className="px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center gap-1.5 transition-colors self-start sm:self-auto"
-            >
-              <Sparkles className="w-3 h-3 text-emerald-400" />
-              <span>Draft Grant Pitch Abstract</span>
-            </button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-slate-700/70 space-y-1">
+            <strong className="text-white block font-mono text-emerald-400">1. SAM.gov Registration</strong>
+            <p className="text-slate-300 text-[11px] leading-relaxed">
+              Required for all federal grants (SBIR/STTR). Requires your state-filed Articles of Organization and IRS EIN CP-575 letter.
+            </p>
           </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed">
-            {aiMatchResult.executiveSummary || aiMatchResult.analysis}
-          </p>
+          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-slate-700/70 space-y-1">
+            <strong className="text-white block font-mono text-emerald-400">2. Unique Entity ID (UEI)</strong>
+            <p className="text-slate-300 text-[11px] leading-relaxed">
+              Free 12-character identifier assigned upon SAM.gov validation (replaces legacy DUNS numbers for federal procurement).
+            </p>
+          </div>
 
-          {/* High Priority Types */}
-          {aiMatchResult.highPriorityGrantTypes && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              {aiMatchResult.highPriorityGrantTypes.map((item: any, idx: number) => (
-                <div key={idx} className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-emerald-400">{item.grantCategory}</span>
-                    <span className="text-slate-400 font-mono text-[11px]">{item.typicalAmount}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300">{item.whyEligible}</p>
-                  <div className="text-[10px] text-slate-400 pt-1">
-                    <strong className="text-slate-300">Action:</strong> {item.actionStep}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Application Tips */}
-          {aiMatchResult.customApplicationTips && (
-            <div className="pt-2">
-              <span className="text-[11px] uppercase tracking-wider text-slate-400 font-mono font-bold block mb-1.5">
-                Strategic Application Recommendations:
-              </span>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
-                {aiMatchResult.customApplicationTips.map((tip: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-slate-700/70 space-y-1">
+            <strong className="text-white block font-mono text-emerald-400">3. Dedicated Commercial Checking</strong>
+            <p className="text-slate-300 text-[11px] leading-relaxed">
+              Grant funds cannot be disbursed to personal checking accounts. Complete your Bank Resolutions next to finalize eligibility.
+            </p>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Filter and Search Bar */}
       <div className="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-4 space-y-3">
@@ -198,7 +153,7 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by keywords (e.g. innovation, SBIR, women, minority, Texas, Chicago)..."
+              placeholder="Search by keywords (e.g. innovation, SBIR, women, minority, Texas, California, veteran)..."
               className="w-full pl-9.5 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-xs focus:outline-none focus:border-emerald-500"
             />
           </div>
@@ -243,7 +198,7 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              City / Municipal
+              City / Regional
             </button>
           </div>
         </div>
@@ -378,31 +333,21 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
                 <div className="flex items-center justify-between pt-2">
                   <button
                     onClick={() => setExpandedGrantId(isExpanded ? null : grant.id)}
-                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 font-medium"
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 font-medium cursor-pointer"
                   >
                     <span>{isExpanded ? 'Hide Eligibility Details' : 'View Eligibility & Criteria'}</span>
                     {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onOpenAdvisorWithPrompt(`Give me an actionable step-by-step application strategy for the grant "${grant.title}" for my LLC "${llcData.businessName}".`)}
-                      className="px-2.5 py-1 text-xs text-emerald-400 hover:bg-emerald-500/10 rounded-lg border border-emerald-500/20 flex items-center gap-1 transition-colors"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      <span>Prep Strategy</span>
-                    </button>
-
-                    <a
-                      href={grant.officialUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <span>Official Portal</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
+                  <a
+                    href={grant.officialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <span>Official Portal</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </div>
             );

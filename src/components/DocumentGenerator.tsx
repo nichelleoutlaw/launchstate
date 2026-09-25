@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Eye
 } from 'lucide-react';
 import { LLCFormData } from '../types';
 import { STATES_DATA } from '../data/statesData';
@@ -27,19 +28,20 @@ import {
   generateInitialResolutions,
   generateDisclaimerAcknowledgment
 } from '../utils/documentTemplates';
+import { PreviewDocType } from './DocumentPreview';
 
 interface DocumentGeneratorProps {
   llcData: LLCFormData;
   onGoToEin: () => void;
-  onOpenAdvisorWithPrompt: (prompt: string) => void;
   onOpenDisclaimerModal: () => void;
+  onOpenPreviewModal?: (doc?: PreviewDocType) => void;
 }
 
 export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   llcData,
   onGoToEin,
-  onOpenAdvisorWithPrompt,
   onOpenDisclaimerModal,
+  onOpenPreviewModal,
 }) => {
   const [selectedDoc, setSelectedDoc] = useState<'articles' | 'operating' | 'ss4' | 'resolutions' | 'disclaimer'>('articles');
   const [copied, setCopied] = useState<boolean>(false);
@@ -225,38 +227,26 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     }, 400);
   };
 
-  // AI Clause Drafter
-  const handleDraftAiClause = async () => {
-    setIsDraftingClause(true);
-    try {
-      const res = await fetch('/api/ai/draft-clauses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessName: `${llcData.businessName} ${llcData.suffix}`,
-          state: stateInfo.name,
-          industry: llcData.industry,
-          clauseType,
-          customRequirement: clauseInstruction,
-        }),
-      });
-      const data = await res.json();
-      if (data.clauseText) {
-        setCustomClauses((prev) => [
-          ...prev,
-          {
-            title: data.clauseTitle || clauseType,
-            text: data.clauseText,
-          },
-        ]);
-        setClauseModalOpen(false);
-        setClauseInstruction('');
-      }
-    } catch (e) {
-      console.error('Failed to draft clause', e);
-    } finally {
-      setIsDraftingClause(false);
-    }
+  // Standard Protective Clauses Library
+  const STANDARD_CLAUSES: Record<string, string> = {
+    'Intellectual Property Assignment': `Each Member hereby irrevocably assigns, transfers, and conveys to the Company all right, title, and interest in and to all intellectual property, inventions, designs, trade secrets, software code, domain names, and work product conceived, created, or developed for or in connection with the Company's business. All work performed by Members constitutes work-made-for-hire to the fullest extent permitted under state and federal law.`,
+    'Founder Equity Vesting Schedule': `The initial Membership Interests issued to Members shall be subject to a four (4) year vesting schedule: twenty-five percent (25%) shall vest on the first anniversary of the Effective Date (the "One-Year Cliff"), and the remaining seventy-five percent (75%) shall vest in equal monthly installments over the subsequent thirty-six (36) months, contingent upon continued active operational engagement. In the event of a change-of-control acquisition, unvested units shall accelerate 100%.`,
+    'Buy-Sell Agreement & Right of First Refusal': `In the event of a fundamental governance deadlock or a Member desiring to dissociate, transfer, or sell their interest, the Company, followed by non-transferring Members pro rata, shall possess an irrevocable Right of First Refusal to purchase said interest at fair market value as determined by an independent certified valuation specialist.`,
+    'Non-Compete and Non-Solicitation': `During their active engagement as a Member or Officer and for a period of twenty-four (24) months following termination, no Member shall directly or indirectly solicit, induce, or divert any commercial client, prospective lead, vendor, employee, or independent contractor of the Company within the relevant trade area.`,
+    'Capital Call Obligations & Dilution': `If additional working capital is authorized by a majority voting consent, each Member shall contribute pro rata according to their ownership percentage within thirty (30) days. If any Member fails to fund their portion, non-defaulting Members may advance the required capital as a preferred contribution and dilute the defaulting Member's equity accordingly.`
+  };
+
+  const handleAddStandardClause = () => {
+    const text = STANDARD_CLAUSES[clauseType] || STANDARD_CLAUSES['Intellectual Property Assignment'];
+    setCustomClauses((prev) => [
+      ...prev,
+      {
+        title: clauseType,
+        text: clauseInstruction ? `${text}\nSpecial Stipulation: ${clauseInstruction}` : text,
+      },
+    ]);
+    setClauseModalOpen(false);
+    setClauseInstruction('');
   };
 
   return (
@@ -500,11 +490,23 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           {selectedDoc === 'operating' && (
             <button
               onClick={() => setClauseModalOpen(true)}
-              className="px-2.5 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center gap-1 transition-colors"
-              title="Add custom AI legal clause"
+              className="px-2.5 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Add standard protective legal clause"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Add AI Clause</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Add Protective Clause</span>
+            </button>
+          )}
+
+          {onOpenPreviewModal && (
+            <button
+              onClick={() => onOpenPreviewModal(selectedDoc)}
+              className="px-2.5 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Open full-screen read-only preview modal"
+            >
+              <Eye className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Live Preview Modal</span>
+              <span className="sm:hidden">Preview</span>
             </button>
           )}
 
@@ -581,30 +583,30 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         </div>
       </div>
 
-      {/* AI Clause Drafter Modal */}
+      {/* Standard Protective Clauses Library Modal */}
       {clauseModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                Draft Custom Operating Agreement Clause
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                Append Protective Operating Agreement Clause
               </h3>
               <button
                 onClick={() => setClauseModalOpen(false)}
-                className="text-slate-400 hover:text-white text-xs font-semibold p-1"
+                className="text-slate-400 hover:text-white text-xs font-semibold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             <p className="text-xs text-slate-300">
-              Select a standard protective legal clause or provide custom requirements for Gemini to draft compliant contractual language under {stateInfo.name} law.
+              Select an attorney-vetted standard protective clause to reinforce your Operating Agreement under {stateInfo.name} LLC statutes.
             </p>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Clause Type
+                Select Clause Template
               </label>
               <select
                 value={clauseType}
@@ -613,7 +615,7 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
               >
                 <option value="Intellectual Property Assignment">Intellectual Property Assignment & Confidentiality</option>
                 <option value="Founder Equity Vesting Schedule">Founder Equity 4-Year Vesting Schedule (1-year cliff)</option>
-                <option value="Buy-Sell Agreement & Right of First Refusal">Buy-Sell Trigger / Deadlock Resolution</option>
+                <option value="Buy-Sell Agreement & Right of First Refusal">Buy-Sell Trigger & Deadlock Resolution</option>
                 <option value="Non-Compete and Non-Solicitation">Non-Compete & Non-Solicitation of Clients</option>
                 <option value="Capital Call Obligations & Dilution">Capital Call Defaults & Member Dilution</option>
               </select>
@@ -621,13 +623,22 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Special Instructions (Optional)
+                Standard Statutory Text Preview:
+              </label>
+              <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-xs text-slate-300 font-mono leading-relaxed max-h-36 overflow-y-auto">
+                {STANDARD_CLAUSES[clauseType]}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Custom Stipulation or Modification (Optional)
               </label>
               <textarea
-                rows={3}
+                rows={2}
                 value={clauseInstruction}
                 onChange={(e) => setClauseInstruction(e.target.value)}
-                placeholder="e.g. Include specific 48-month monthly vesting with single-trigger acceleration upon company sale."
+                placeholder="e.g. Set specific 36-month non-compete duration or add single-trigger change-of-control acceleration."
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
               />
             </div>
@@ -636,18 +647,17 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
               <button
                 type="button"
                 onClick={() => setClauseModalOpen(false)}
-                className="px-3.5 py-1.5 text-xs font-medium text-slate-400 hover:text-white"
+                className="px-3.5 py-1.5 text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                disabled={isDraftingClause}
-                onClick={handleDraftAiClause}
-                className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex items-center gap-1.5 disabled:opacity-50"
+                onClick={handleAddStandardClause}
+                className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{isDraftingClause ? 'Drafting Clause...' : 'Generate & Append Clause'}</span>
+                <Check className="w-3.5 h-3.5" />
+                <span>Append Clause to Agreement</span>
               </button>
             </div>
           </div>

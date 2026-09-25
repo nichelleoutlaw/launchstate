@@ -13,7 +13,8 @@ import {
   HelpCircle,
   Search,
   ArrowRight,
-  Smartphone
+  Smartphone,
+  Server
 } from 'lucide-react';
 import { LLCFormData } from '../types';
 import { DIGITAL_TOOLS } from '../data/digitalToolsData';
@@ -21,12 +22,12 @@ import { STATES_DATA } from '../data/statesData';
 
 interface DigitalPresenceHubProps {
   llcData: LLCFormData;
-  onOpenAdvisorWithPrompt: (prompt: string) => void;
+  onGoToDnsAdvisor?: () => void;
 }
 
 export const DigitalPresenceHub: React.FC<DigitalPresenceHubProps> = ({
   llcData,
-  onOpenAdvisorWithPrompt,
+  onGoToDnsAdvisor,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'voice' | 'email' | 'domain' | 'banking'>('domain');
   const [copiedRecord, setCopiedRecord] = useState<string | null>(null);
@@ -79,13 +80,16 @@ export const DigitalPresenceHub: React.FC<DigitalPresenceHubProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onOpenAdvisorWithPrompt(`What are the exact DNS MX, SPF, and DKIM settings I need to connect Google Workspace to my new domain for ${llcData.businessName}?`)}
-              className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>DNS & Security Setup Guide</span>
-            </button>
+            {onGoToDnsAdvisor && (
+              <button
+                onClick={onGoToDnsAdvisor}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
+              >
+                <Server className="w-3.5 h-3.5" />
+                <span>Open DNS Advisor</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>

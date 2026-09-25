@@ -13,7 +13,9 @@ import {
   RotateCcw,
   Scale,
   Calculator,
-  Coins
+  Coins,
+  Server,
+  AtSign
 } from 'lucide-react';
 import { LLCFormData } from '../types';
 
@@ -39,16 +41,16 @@ export const AiAdvisorModal: React.FC<AiAdvisorModalProps> = ({
   initialPrompt,
 }) => {
   const [question, setQuestion] = useState<string>('');
-  const [activeRole, setActiveRole] = useState<'legal' | 'tax' | 'funding'>('legal');
+  const [activeRole, setActiveRole] = useState<'legal' | 'tax' | 'funding' | 'infra'>('legal');
   const [messages, setMessages] = useState<MessageItem[]>([
     {
       id: 'init-1',
       role: 'assistant',
-      text: `Hello! I am your Corporate Formation & Capital Advisor with live Google Search grounding. I can advise you on:
+      text: `Hello! I am your Corporate Formation, Capital & Digital Infrastructure Advisor with live Google Search grounding. I can advise you on:
 • Choosing between home-state vs. Delaware/Wyoming LLC formation
 • Single-member vs. Multi-member Operating Agreement structuring
 • S-Corporation tax election strategy (IRS Form 2553)
-• Avoiding registered agent privacy pitfalls and publication traps
+• Domain, DNS, Google Workspace (MX, SPF, DKIM, DMARC) email deliverability
 • City, state, and federal grants, SBA loans, and banking qualification
 
 What question can I clarify for **${llcData.businessName || 'your business'}** in **${llcData.formationState}**?`,
@@ -141,6 +143,7 @@ What question can I clarify for **${llcData.businessName || 'your business'}** i
   };
 
   const sampleQuestions = [
+    `Exact Google Workspace DNS (MX, SPF, DKIM) setup?`,
     `Home State (${llcData.formationState}) vs Delaware/Wyoming?`,
     'Member-Managed vs. Manager-Managed difference?',
     'When should my LLC elect S-Corp tax status?',
@@ -197,6 +200,7 @@ What question can I clarify for **${llcData.businessName || 'your business'}** i
             { id: 'legal', label: 'Corporate Law & State Filings', icon: Scale },
             { id: 'tax', label: 'IRS Tax & S-Corp Elections', icon: Calculator },
             { id: 'funding', label: 'Grants & Business Loans', icon: Coins },
+            { id: 'infra', label: 'Domain, DNS & Workspace', icon: Server },
           ].map((r) => {
             const Icon = r.icon;
             const isCurrent = activeRole === r.id;

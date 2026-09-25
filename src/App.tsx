@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
+import React, { useState } from 'react';
+import { Navbar, MilestoneStep, SubTabId } from './components/Navbar';
 import { FormationWizard } from './components/FormationWizard';
 import { DocumentGenerator } from './components/DocumentGenerator';
-import { EinAssistant } from './components/EinAssistant';
-import { ComplianceTracker } from './components/ComplianceTracker';
-import { FundingFinder } from './components/FundingFinder';
-import { LoanMatcher } from './components/LoanMatcher';
-import { DigitalPresenceHub } from './components/DigitalPresenceHub';
-import { StateFilingDirectory } from './components/StateFilingDirectory';
 import { FormationChecklist } from './components/FormationChecklist';
-import { AiAdvisorModal } from './components/AiAdvisorModal';
+import { BrandKit } from './components/BrandKit';
+import { DigitalPresenceHub } from './components/DigitalPresenceHub';
+import { DnsAdvisor } from './components/DnsAdvisor';
+import { FundingFinder } from './components/FundingFinder';
+import { BankResolutions } from './components/BankResolutions';
+import { EinAssistant } from './components/EinAssistant';
+import { StateFilingDirectory } from './components/StateFilingDirectory';
+import { SideChecklist } from './components/SideChecklist';
 import { LegalDisclaimerModal } from './components/LegalDisclaimerModal';
+import { DocumentPreview, PreviewDocType } from './components/DocumentPreview';
 import { LLCFormData, FormationStepState, UsStateCode, LegalAcknowledgment } from './types';
 import { 
   loadSavedLLCData, 
@@ -31,10 +33,15 @@ import { Scale, ShieldAlert, CheckCircle2 } from 'lucide-react';
 export default function App() {
   const [llcData, setLlcData] = useState<LLCFormData>(loadSavedLLCData);
   const [stepState, setStepState] = useState<FormationStepState>(loadSavedStepState);
-  const [activeTab, setActiveTab] = useState<string>('formation');
-  const [advisorOpen, setAdvisorOpen] = useState<boolean>(false);
-  const [advisorInitialPrompt, setAdvisorInitialPrompt] = useState<string>('');
+  
+  // 3 Clear Milestone Steps Navigation
+  const [activeMilestone, setActiveMilestone] = useState<MilestoneStep>('step1-legal');
+  const [activeSubTab, setActiveSubTab] = useState<SubTabId>('entity-setup');
+  const [sideChecklistOpen, setSideChecklistOpen] = useState<boolean>(true);
+
   const [disclaimerOpen, setDisclaimerOpen] = useState<boolean>(false);
+  const [previewOpen, setPreviewOpen] = useState<boolean>(false);
+  const [previewInitialDoc, setPreviewInitialDoc] = useState<PreviewDocType>('binder');
 
   // Persist LLC state changes
   const updateLLCData = (updates: Partial<LLCFormData>) => {
@@ -49,6 +56,12 @@ export default function App() {
     updateLLCData({ legalAcknowledgment: ack });
   };
 
+  // Open live read-only document preview modal
+  const handleOpenPreview = (doc: PreviewDocType = 'binder') => {
+    setPreviewInitialDoc(doc);
+    setPreviewOpen(true);
+  };
+
   // Persist step completion changes
   const updateStepState = (key: keyof FormationStepState, value: boolean) => {
     setStepState((prev) => {
@@ -58,13 +71,11 @@ export default function App() {
     });
   };
 
-  const handleOpenAdvisor = (prompt?: string) => {
-    if (prompt) {
-      setAdvisorInitialPrompt(prompt);
-    } else {
-      setAdvisorInitialPrompt('');
-    }
-    setAdvisorOpen(true);
+  // Helper to switch view and ensure milestone matches
+  const navigateTo = (milestone: MilestoneStep, subTab: SubTabId) => {
+    setActiveMilestone(milestone);
+    setActiveSubTab(subTab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Full Formation Binder Exporter
@@ -134,94 +145,131 @@ STATE FILING CHECKLIST & NEXT STEPS:
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
-      {/* Top Navigation */}
+      {/* Top Stepper Navigation (3 Clear Milestone Steps) */}
       <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        activeMilestone={activeMilestone}
+        setActiveMilestone={setActiveMilestone}
+        activeSubTab={activeSubTab}
+        setActiveSubTab={setActiveSubTab}
         llcData={llcData}
         stepState={stepState}
-        onOpenAdvisor={() => handleOpenAdvisor()}
-        onExportAll={handleExportAll}
+        onExportAll={() => handleOpenPreview('binder')}
+        sideChecklistOpen={sideChecklistOpen}
+        onToggleSideChecklist={() => setSideChecklistOpen(!sideChecklistOpen)}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Active Tab View */}
-        {activeTab === 'formation' && (
-          <div className="space-y-8">
-            <FormationWizard
-              llcData={llcData}
-              updateLLCData={updateLLCData}
-              onGenerateDocs={() => setActiveTab('documents')}
-              onGoToTab={(tabId) => setActiveTab(tabId)}
-              onOpenAdvisorWithPrompt={handleOpenAdvisor}
-            />
+      {/* Main Content Layout with Persistent Side Checklist */}
+      <div className="flex-1 flex w-full relative">
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 min-w-0">
+          
+          {/* ==================================================================== */}
+          {/* STEP 1: LEGAL FOUNDATION (Entity Setup, Checklist, Documents)       */}
+          {/* ==================================================================== */}
+          {activeSubTab === 'entity-setup' && (
+            <div className="space-y-8">
+              <FormationWizard
+                llcData={llcData}
+                updateLLCData={updateLLCData}
+                onGenerateDocs={() => navigateTo('step1-legal', 'documents')}
+                onGoToTab={(tabId) => {
+                  if (tabId === 'documents') navigateTo('step1-legal', 'documents');
+                  else if (tabId === 'checklist') navigateTo('step1-legal', 'checklist');
+                  else if (tabId === 'state-directory') navigateTo('step1-legal', 'checklist');
+                }}
+              />
+            </div>
+          )}
 
+        {activeSubTab === 'checklist' && (
+          <div className="space-y-8">
             <FormationChecklist
               llcData={llcData}
               stepState={stepState}
               updateStepState={updateStepState}
-              onNavigateTab={(tabId) => setActiveTab(tabId)}
+              onNavigateTab={(tabId) => {
+                if (tabId === 'formation') navigateTo('step1-legal', 'entity-setup');
+                else if (tabId === 'documents') navigateTo('step1-legal', 'documents');
+                else if (tabId === 'digital-identity') navigateTo('step2-brand', 'domain-email');
+                else if (tabId === 'funding') navigateTo('step3-capital', 'grants-engine');
+                else navigateTo('step1-legal', 'entity-setup');
+              }}
+            />
+
+            {/* State Filing Directory Quick Access */}
+            <StateFilingDirectory
+              selectedState={llcData.formationState}
+              onSelectState={(st: UsStateCode) => {
+                updateLLCData({ formationState: st });
+              }}
             />
           </div>
         )}
 
-        {activeTab === 'documents' && (
+        {activeSubTab === 'documents' && (
           <DocumentGenerator
             llcData={llcData}
-            onGoToEin={() => setActiveTab('ein')}
-            onOpenAdvisorWithPrompt={handleOpenAdvisor}
+            onGoToEin={() => navigateTo('step1-legal', 'checklist')}
             onOpenDisclaimerModal={() => setDisclaimerOpen(true)}
+            onOpenPreviewModal={handleOpenPreview}
           />
         )}
 
-        {activeTab === 'ein' && (
-          <EinAssistant
+        {/* ==================================================================== */}
+        {/* STEP 2: BRAND & IDENTITY (Brand Kit, Domain & Email, DNS Advisor)    */}
+        {/* ==================================================================== */}
+        {activeSubTab === 'brand-kit' && (
+          <BrandKit
             llcData={llcData}
             updateLLCData={updateLLCData}
-            onOpenAdvisorWithPrompt={handleOpenAdvisor}
+            onGoToDomainEmail={() => navigateTo('step2-brand', 'domain-email')}
+            onGoToDnsAdvisor={() => navigateTo('step2-brand', 'dns-advisor')}
           />
         )}
 
-        {activeTab === 'compliance' && (
-          <ComplianceTracker
-            llcData={llcData}
-            onOpenAdvisorWithPrompt={handleOpenAdvisor}
-            userEmail="xMsOutlawx@gmail.com"
-          />
-        )}
-
-        {activeTab === 'funding' && (
-          <FundingFinder
-            llcData={llcData}
-            onOpenAdvisorWithPrompt={handleOpenAdvisor}
-          />
-        )}
-
-        {activeTab === 'loans' && (
-          <LoanMatcher
-            llcData={llcData}
-            onOpenAdvisorWithPrompt={handleOpenAdvisor}
-          />
-        )}
-
-        {activeTab === 'digital-identity' && (
+        {activeSubTab === 'domain-email' && (
           <DigitalPresenceHub
             llcData={llcData}
-            onOpenAdvisorWithPrompt={handleOpenAdvisor}
+            onGoToDnsAdvisor={() => navigateTo('step2-brand', 'dns-advisor')}
           />
         )}
 
-        {activeTab === 'state-directory' && (
-          <StateFilingDirectory
-            selectedState={llcData.formationState}
-            onSelectState={(st: UsStateCode) => {
-              updateLLCData({ formationState: st });
-              setActiveTab('formation');
-            }}
+        {activeSubTab === 'dns-advisor' && (
+          <DnsAdvisor
+            llcData={llcData}
+            onGoToGrants={() => navigateTo('step3-capital', 'grants-engine')}
+            onGoToBankResolutions={() => navigateTo('step3-capital', 'bank-resolutions')}
+          />
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 3: CAPITAL & GROWTH (Grants Engine, Bank Resolutions)          */}
+        {/* ==================================================================== */}
+        {activeSubTab === 'grants-engine' && (
+          <FundingFinder
+            llcData={llcData}
+            onGoToBankResolutions={() => navigateTo('step3-capital', 'bank-resolutions')}
+          />
+        )}
+
+        {activeSubTab === 'bank-resolutions' && (
+          <BankResolutions
+            llcData={llcData}
+            onGoToGrants={() => navigateTo('step3-capital', 'grants-engine')}
+            onGoToDocuments={() => navigateTo('step1-legal', 'documents')}
           />
         )}
       </main>
+
+      {/* Persistent Side Checklist Companion */}
+      <SideChecklist
+        llcData={llcData}
+        stepState={stepState}
+        updateStepState={updateStepState}
+        onNavigate={navigateTo}
+        isOpen={sideChecklistOpen}
+        onToggle={() => setSideChecklistOpen(!sideChecklistOpen)}
+      />
+    </div>
 
       {/* Persistent Legal Notice & Disclaimer Banner */}
       <div className="bg-slate-950/80 border-t border-slate-800/80 py-3.5 px-4 text-xs">
@@ -237,7 +285,7 @@ STATE FILING CHECKLIST & NEXT STEPS:
             {llcData.legalAcknowledgment?.isSigned ? (
               <button
                 onClick={() => setDisclaimerOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-medium hover:bg-emerald-500/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-medium hover:bg-emerald-500/20 transition-colors cursor-pointer"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Disclaimer Verified ({llcData.legalAcknowledgment.signedName})</span>
@@ -245,7 +293,7 @@ STATE FILING CHECKLIST & NEXT STEPS:
             ) : (
               <button
                 onClick={() => setDisclaimerOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[11px] font-medium hover:bg-amber-500/25 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[11px] font-medium hover:bg-amber-500/25 transition-colors cursor-pointer"
               >
                 <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
                 <span>Review & Sign Disclaimer Acknowledgment</span>
@@ -259,14 +307,14 @@ STATE FILING CHECKLIST & NEXT STEPS:
       <footer className="border-t border-slate-900 bg-slate-950 py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-slate-400">LaunchState LLC & Funding Engine</span>
+            <span className="font-bold text-slate-400">LaunchState LLC & Capital Engine</span>
             <span>·</span>
-            <span>Automated Articles of Organization, Form SS-4 EIN & Capital Hub</span>
+            <span>Automated Articles of Organization, Operating Agreements & Treasury Hub</span>
           </div>
           <div className="text-slate-500 text-center sm:text-right flex items-center gap-3">
             <button
               onClick={() => setDisclaimerOpen(true)}
-              className="text-slate-400 hover:text-white underline transition-colors"
+              className="text-slate-400 hover:text-white underline transition-colors cursor-pointer"
             >
               Legal Terms & Disclaimers
             </button>
@@ -276,20 +324,21 @@ STATE FILING CHECKLIST & NEXT STEPS:
         </div>
       </footer>
 
-      {/* AI Advisor Modal */}
-      <AiAdvisorModal
-        isOpen={advisorOpen}
-        onClose={() => setAdvisorOpen(false)}
-        llcData={llcData}
-        initialPrompt={advisorInitialPrompt}
-      />
-
       {/* Legal Disclaimer & Self-Help Agreement Modal */}
       <LegalDisclaimerModal
         isOpen={disclaimerOpen}
         onClose={() => setDisclaimerOpen(false)}
         llcData={llcData}
         onSaveAcknowledgment={handleSaveAcknowledgment}
+      />
+
+      {/* Pre-Export Live Read-Only Document Preview Modal */}
+      <DocumentPreview
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        llcData={llcData}
+        initialDoc={previewInitialDoc}
+        onConfirmExport={handleExportAll}
       />
     </div>
   );

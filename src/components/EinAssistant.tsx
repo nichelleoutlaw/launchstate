@@ -19,7 +19,7 @@ import { generateFormSS4Packet } from '../utils/documentTemplates';
 interface EinAssistantProps {
   llcData: LLCFormData;
   updateLLCData: (data: Partial<LLCFormData>) => void;
-  onOpenAdvisorWithPrompt: (prompt: string) => void;
+  onOpenAdvisorWithPrompt?: (prompt: string) => void;
 }
 
 export const EinAssistant: React.FC<EinAssistantProps> = ({
@@ -250,12 +250,9 @@ export const EinAssistant: React.FC<EinAssistantProps> = ({
               Form SS-4 Pre-Filing Data Worksheet
             </h3>
           </div>
-          <button
-            onClick={() => onOpenAdvisorWithPrompt(`Should my LLC elect S-Corp tax status on Form 2553 after receiving my EIN, or remain a standard LLC?`)}
-            className="text-xs text-emerald-400 hover:text-emerald-300 font-medium"
-          >
-            Ask Tax Advisor about S-Corp Election →
-          </button>
+          <span className="text-xs text-slate-400 font-mono">
+            IRS Form SS-4 Equivalent Line Items
+          </span>
         </div>
 
         <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 whitespace-pre-wrap max-h-72 overflow-y-auto leading-relaxed">
