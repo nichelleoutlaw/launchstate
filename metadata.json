@@ -1,0 +1,6 @@
+{
+  "name": "LaunchState LLC & Funding Engine",
+  "description": "Streamlined online LLC formation, automated Articles of Organization, IRS EIN generation, city/state/federal grant discovery, business loans, and digital identity setup.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

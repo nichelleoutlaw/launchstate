@@ -1,0 +1,154 @@
+import { DigitalToolItem } from '../types';
+
+export const DIGITAL_TOOLS: DigitalToolItem[] = [
+  {
+    id: 'tool-google-voice',
+    category: 'voice',
+    title: 'Google Voice for Business',
+    provider: 'Google Workspace',
+    costMonthly: '$10 / user / month (Starter) or Free for personal basic',
+    freeTier: true,
+    setupTime: '5 minutes',
+    description: 'Keep your personal cell phone number private with a dedicated business telephone number that rings to your smartphone, laptop, and desk phone with AI-powered spam filtering and voicemail transcripts.',
+    keyFeatures: [
+      'Choose a local area code matching your city or formation state',
+      'Ring multiple devices simultaneously (iOS, Android, Chrome/Web)',
+      'Free unlimited calls within the US and Canada',
+      'Automated voicemail transcription emailed directly to your inbox',
+      'Business SMS & MMS text messaging directly with clients',
+      'Auto-attendant (virtual receptionist) available on Standard plan ($20/mo)',
+    ],
+    directUrl: 'https://workspace.google.com/products/voice/',
+    setupGuideSteps: [
+      {
+        step: 1,
+        title: 'Sign In & Select Plan',
+        desc: 'Go to workspace.google.com/products/voice and choose the Starter Plan ($10/user/mo) or link your Google account.',
+      },
+      {
+        step: 2,
+        title: 'Pick Your Business Area Code',
+        desc: 'Search for available numbers by city or three-digit area code where your LLC is located.',
+      },
+      {
+        step: 3,
+        title: 'Link Your Personal Device',
+        desc: 'Enter your mobile phone number. Google will send a 6-digit verification code. Calls to your business line will seamlessly forward here.',
+      },
+      {
+        step: 4,
+        title: 'Set Business Hours & Custom Voicemail',
+        desc: 'Record a professional greeting: "Thank you for calling [Company Name]. Please leave a message or text us..." and set after-hours routing.',
+      },
+    ],
+  },
+  {
+    id: 'tool-business-email',
+    category: 'email',
+    title: 'Google Workspace Business Email',
+    provider: 'Google',
+    costMonthly: '$6 / user / month (Business Starter with 14-day free trial)',
+    freeTier: false,
+    setupTime: '10 minutes',
+    description: 'Build instant credibility with prospective clients and lenders with professional addresses like name@yourcompany.com powered by Gmail, Google Drive, Docs, and Meet.',
+    keyFeatures: [
+      'Custom email domain matching your business name (e.g., info@company.com)',
+      'Unlimited free aliases (support@, sales@, billing@, press@ routing to one inbox)',
+      '30 GB to 2 TB secure cloud storage per user on Google Drive',
+      'Industry-standard SPF, DKIM, and DMARC spoof protection',
+      'Zero advertising and 99.9% guaranteed uptime SLA',
+    ],
+    directUrl: 'https://workspace.google.com/',
+    setupGuideSteps: [
+      {
+        step: 1,
+        title: 'Start 14-Day Free Trial',
+        desc: 'Visit workspace.google.com and enter your business name and employee count (choose "Just you" for solo founders).',
+      },
+      {
+        step: 2,
+        title: 'Connect Your Registered Domain',
+        desc: 'Select "Yes, I have a domain" and enter your domain (e.g., yourcompany.com) or purchase one in 1 click.',
+      },
+      {
+        step: 3,
+        title: 'Create Your Admin Username',
+        desc: 'Set your primary address (e.g. founder@yourcompany.com or contact@yourcompany.com) and a strong master password.',
+      },
+      {
+        step: 4,
+        title: 'Verify DNS MX Records',
+        desc: 'Workspace automatically adds Gmail MX records if using Google Domains / Squarespace, or provides simple copy-paste DNS records.',
+      },
+    ],
+  },
+  {
+    id: 'tool-business-domain',
+    category: 'domain',
+    title: 'Business Domain Name Registration',
+    provider: 'Squarespace Domains / Cloudflare / Namecheap',
+    costMonthly: '$10 - $14 / year',
+    freeTier: false,
+    setupTime: '3 minutes',
+    description: 'Claim your brand on the internet. Securing your .com or .co domain protects your LLC trademark and sets up your website and corporate email.',
+    keyFeatures: [
+      'Free WHOIS privacy protection (keeps your home address off public spam lists)',
+      'DNSSEC and fast global Anycast DNS resolution',
+      'No hidden renewal markups on transparent registrars (Cloudflare or Namecheap)',
+      'Easy 1-click connection to Google Workspace, Shopify, Webflow, or Squarespace',
+    ],
+    directUrl: 'https://domains.squarespace.com/',
+    setupGuideSteps: [
+      {
+        step: 1,
+        title: 'Search Domain Availability',
+        desc: 'Check if your exact LLC name is available as a .com, .co, or .io. If taken, try adding your state (e.g., [brand]tx.com) or "get[brand].com".',
+      },
+      {
+        step: 2,
+        title: 'Enable WHOIS Privacy',
+        desc: 'Always ensure "WHOIS Privacy" is enabled (free on modern registrars) so your personal address and phone are hidden.',
+      },
+      {
+        step: 3,
+        title: 'Set Auto-Renew',
+        desc: 'Lock in auto-renewal so your business web and email never accidentally expire or get grabbed by domain squatters.',
+      },
+    ],
+  },
+  {
+    id: 'tool-business-banking',
+    category: 'banking',
+    title: 'Zero-Fee Business Checking & Debit Card',
+    provider: 'Mercury / Relay Financial / Chase Business',
+    costMonthly: '$0 / month (No minimum balance, no monthly maintenance fees)',
+    freeTier: true,
+    setupTime: '15 minutes online',
+    description: 'Crucial for maintaining your LLC corporate veil: never mingle personal and business funds. Get a dedicated business bank account with virtual debit cards and ACH payouts.',
+    keyFeatures: [
+      '$0 monthly maintenance fees & $0 minimum balance requirements',
+      'Up to $5,000,000 FDIC insurance through partner bank sweep networks',
+      'Virtual and physical commercial debit cards with team spending limits',
+      'Free domestic and international USD wire transfers (Mercury)',
+      'Instant connection with QuickBooks, Xero, Stripe, and PayPal',
+    ],
+    directUrl: 'https://mercury.com/',
+    setupGuideSteps: [
+      {
+        step: 1,
+        title: 'Gather Your Formation Documents',
+        desc: 'You will need: (1) Approved Articles of Organization from your state, (2) IRS EIN Confirmation Letter (CP 575 or Form 147C), and (3) Government Photo ID.',
+      },
+      {
+        step: 2,
+        title: 'Submit Online Application',
+        desc: 'Apply at mercury.com or relayfi.com — 100% online with zero branch visits required.',
+      },
+      {
+        step: 3,
+        title: 'Fund With Initial Capital Contribution',
+        desc: 'Deposit your initial LLC member capital contribution (e.g. $100 - $1,000) from your personal account to establish your capital ledger.',
+      },
+    ],
+  },
+];
