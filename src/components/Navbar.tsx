@@ -20,7 +20,6 @@ export type MilestoneStep = 'step1-legal' | 'step2-brand' | 'step3-capital';
 export type SubTabId = 
   // Step 1: Legal Foundation
   | 'entity-setup'
-  | 'checklist'
   | 'documents'
   // Step 2: Brand & Identity
   | 'brand-kit'
@@ -64,8 +63,7 @@ const MILESTONES: MilestoneConfig[] = [
     defaultSubTab: 'entity-setup',
     subTabs: [
       { id: 'entity-setup', label: 'Entity Setup', icon: Building2 },
-      { id: 'checklist', label: 'Checklist', icon: ShieldCheck },
-      { id: 'documents', label: 'Documents', icon: FileText },
+      { id: 'documents', label: 'Documents & Binder', icon: FileText },
     ],
   },
   {

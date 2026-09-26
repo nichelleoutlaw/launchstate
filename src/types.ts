@@ -39,6 +39,7 @@ export interface LLCFormData {
   businessName: string;
   suffix: 'LLC' | 'L.L.C.' | 'Limited Liability Company';
   tagline: string;
+  customLogoUrl?: string;
   industry: string;
   businessDescription: string;
   naicsCode: string;

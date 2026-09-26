@@ -83,7 +83,7 @@ export const SideChecklist: React.FC<SideChecklistProps> = ({
           key: 'stateFilingReady',
           title: `File with ${stateInfo.code} Secretary of State ($${stateInfo.filingFee})`,
           milestone: 'step1-legal',
-          subTab: 'checklist',
+          subTab: 'documents',
           externalLink: stateInfo.statePortalUrl,
         },
         {
@@ -96,7 +96,7 @@ export const SideChecklist: React.FC<SideChecklistProps> = ({
           key: 'ss4Ready',
           title: 'Obtain IRS EIN (Form SS-4)',
           milestone: 'step1-legal',
-          subTab: 'checklist',
+          subTab: 'documents',
           externalLink: 'https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online',
         },
       ],

@@ -20,6 +20,44 @@ import { LLCFormData } from '../types';
 import { DIGITAL_TOOLS } from '../data/digitalToolsData';
 import { STATES_DATA } from '../data/statesData';
 
+type RegistrarId = 'namecheap' | 'porkbun' | 'godaddy';
+
+interface RegistrarConfig {
+  id: RegistrarId;
+  name: string;
+  badge: string;
+  tagline: string;
+  buttonClass: string;
+  getUrl: (domain: string) => string;
+}
+
+const REGISTRARS: Record<RegistrarId, RegistrarConfig> = {
+  namecheap: {
+    id: 'namecheap',
+    name: 'Namecheap',
+    badge: 'Recommended · Direct Results',
+    tagline: 'Best for .biz, .com & free lifetime WHOIS Privacy Guard',
+    buttonClass: 'bg-orange-600 hover:bg-orange-500 text-white shadow-orange-950/30',
+    getUrl: (d) => `https://www.namecheap.com/domains/registration/results/?domain=${encodeURIComponent(d)}`,
+  },
+  porkbun: {
+    id: 'porkbun',
+    name: 'Porkbun',
+    badge: 'At-Cost Pricing',
+    tagline: 'Developer favorite with transparent renewal pricing & free privacy',
+    buttonClass: 'bg-pink-600 hover:bg-pink-500 text-white shadow-pink-950/30',
+    getUrl: (d) => `https://porkbun.com/checkout/search?q=${encodeURIComponent(d)}`,
+  },
+  godaddy: {
+    id: 'godaddy',
+    name: 'GoDaddy',
+    badge: 'Global Registrar',
+    tagline: 'Instant global domain availability & checkout engine',
+    buttonClass: 'bg-teal-600 hover:bg-teal-500 text-white shadow-teal-950/30',
+    getUrl: (d) => `https://www.godaddy.com/domainsearch/find?checkAvail=1&domainToCheck=${encodeURIComponent(d)}`,
+  },
+};
+
 interface DigitalPresenceHubProps {
   llcData: LLCFormData;
   onGoToDnsAdvisor?: () => void;
@@ -30,23 +68,46 @@ export const DigitalPresenceHub: React.FC<DigitalPresenceHubProps> = ({
   onGoToDnsAdvisor,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'voice' | 'email' | 'domain' | 'banking'>('domain');
+  const [selectedRegistrar, setSelectedRegistrar] = useState<RegistrarId>('namecheap');
   const [copiedRecord, setCopiedRecord] = useState<string | null>(null);
   const [domainSearchQuery, setDomainSearchQuery] = useState<string>(
     llcData.businessName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'vanguardsynergy'
   );
 
-  const cleanBrand = domainSearchQuery.trim().toLowerCase().replace(/[^a-z0-9]/g, '') || 'company';
+  const currentRegistrar = REGISTRARS[selectedRegistrar];
+
+  const rawInput = domainSearchQuery.trim().toLowerCase();
+  // Strip trailing extension if typed (e.g., vanguardsynergy.biz -> vanguardsynergy) to generate sister TLDs
+  const cleanBrand = rawInput
+    .replace(/\.(biz|com|co|io|net|org|xyz|us|app|dev|tech|store|info)$/i, '')
+    .replace(/[^a-z0-9]/g, '') || 'company';
+
+  const hasSpecificExtension = rawInput.includes('.');
+  const exactDomainTarget = hasSpecificExtension ? rawInput.replace(/[^a-z0-9.-]/g, '') : null;
   const stateInfo = STATES_DATA[llcData.formationState] || STATES_DATA['TX'];
 
-  // Generated Domain Suggestions
-  const domainSuggestions = [
-    { domain: `${cleanBrand}.com`, tld: '.com', tag: 'Standard Gold', price: '$12/yr', provider: 'Squarespace / Cloudflare' },
-    { domain: `get${cleanBrand}.com`, tld: '.com', tag: 'High-Growth Action', price: '$12/yr', provider: 'Cloudflare' },
-    { domain: `${cleanBrand}.co`, tld: '.co', tag: 'Modern Company', price: '$24/yr', provider: 'Namecheap' },
-    { domain: `${cleanBrand}.io`, tld: '.io', tag: 'Tech & Engineering', price: '$35/yr', provider: 'Squarespace' },
-    { domain: `${cleanBrand}hq.com`, tld: '.com', tag: 'Corporate HQ', price: '$12/yr', provider: 'Cloudflare' },
-    { domain: `${cleanBrand}.biz`, tld: '.biz', tag: 'Commercial Trade', price: '$15/yr', provider: 'Namecheap' },
+  // Generated Domain Suggestions (TLD-agnostic)
+  const baseSuggestions = [
+    { domain: `${cleanBrand}.biz`, tld: '.biz', tag: 'Commercial Trade', price: '$14.98/yr' },
+    { domain: `${cleanBrand}.com`, tld: '.com', tag: 'Standard Gold', price: '$10.28/yr' },
+    { domain: `get${cleanBrand}.com`, tld: '.com', tag: 'High-Growth Action', price: '$10.28/yr' },
+    { domain: `${cleanBrand}.co`, tld: '.co', tag: 'Modern Company', price: '$23.98/yr' },
+    { domain: `${cleanBrand}.io`, tld: '.io', tag: 'Tech & Engineering', price: '$34.98/yr' },
+    { domain: `${cleanBrand}hq.com`, tld: '.com', tag: 'Corporate HQ', price: '$10.28/yr' },
   ];
+
+  // If user entered a specific domain like "vanguardsynergy.biz", put it at the very front
+  const domainSuggestions = exactDomainTarget && !baseSuggestions.some(s => s.domain === exactDomainTarget)
+    ? [
+        {
+          domain: exactDomainTarget,
+          tld: `.${exactDomainTarget.split('.').pop() || 'com'}`,
+          tag: 'Exact Search Query',
+          price: '$12 - $15/yr',
+        },
+        ...baseSuggestions
+      ]
+    : baseSuggestions;
 
   const handleCopy = async (text: string, id: string) => {
     try {
@@ -141,17 +202,68 @@ export const DigitalPresenceHub: React.FC<DigitalPresenceHubProps> = ({
               </div>
             </div>
 
-            {/* Search Input Bar */}
-            <div className="flex gap-2 pt-2">
+            {/* Search Input Bar & Direct Registrar Action */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <div className="relative flex-1">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={domainSearchQuery}
                   onChange={(e) => setDomainSearchQuery(e.target.value)}
-                  placeholder="Enter your brand name without spaces..."
+                  placeholder="e.g. vanguardsynergy or vanguardsynergy.biz"
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 font-mono"
                 />
+              </div>
+
+              <a
+                href={currentRegistrar.getUrl(domainSearchQuery.trim() || 'vanguardsynergy.biz')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`px-5 py-2.5 font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg ${currentRegistrar.buttonClass}`}
+              >
+                <span>Search on {currentRegistrar.name}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {/* Registrar Engine Selector */}
+            <div className="space-y-2 pt-1 border-t border-slate-700/50">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 font-medium">Domain Registrar:</span>
+                  <div className="flex items-center gap-1.5 p-1 bg-slate-900 rounded-lg border border-slate-700">
+                    {(Object.keys(REGISTRARS) as RegistrarId[]).map((regId) => {
+                      const reg = REGISTRARS[regId];
+                      const isSelected = selectedRegistrar === regId;
+                      return (
+                        <button
+                          key={regId}
+                          onClick={() => setSelectedRegistrar(regId)}
+                          className={`px-2.5 py-1 text-xs rounded-md font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? `${reg.buttonClass} shadow-sm font-bold`
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {reg.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{currentRegistrar.tagline}</span>
+                </div>
+              </div>
+
+              {/* Informational Registrar Transparency Note */}
+              <div className="p-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-[11px] text-slate-400 flex items-start gap-2">
+                <HelpCircle className="w-3.5 h-3.5 text-slate-500 mt-0.5 shrink-0" />
+                <span>
+                  <strong>Live Search Guarantee:</strong> Namecheap, Porkbun, and GoDaddy open straight to real-time availability results and direct cart checkout. (Squarespace currently blocks direct URL searches, and Cloudflare requires an existing Cloudflare Dashboard account).
+                </span>
               </div>
             </div>
 
@@ -160,30 +272,62 @@ export const DigitalPresenceHub: React.FC<DigitalPresenceHubProps> = ({
               {domainSuggestions.map((item, idx) => (
                 <div
                   key={idx}
-                  className="p-4 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-2 flex flex-col justify-between"
+                  className="p-4 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-3 flex flex-col justify-between"
                 >
-                  <div>
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         {item.tag}
                       </span>
                       <span className="text-xs font-mono font-semibold text-slate-300">{item.price}</span>
                     </div>
-                    <div className="font-mono text-sm font-bold text-white mt-2 truncate">
+
+                    <div className="font-mono text-sm font-bold text-white pt-1 truncate">
                       {item.domain}
                     </div>
-                    <div className="text-[11px] text-slate-400">Registrar: {item.provider}</div>
+
+                    {/* Dynamic Registrar Label (100% matched to active selection) */}
+                    <div className="text-[11px] text-slate-400 flex items-center justify-between pt-0.5">
+                      <span>Registrar: <strong className="text-slate-200 font-semibold">{currentRegistrar.name}</strong></span>
+                      <span className="text-[10px] text-emerald-400 font-mono">Instant Live Check</span>
+                    </div>
                   </div>
 
-                  <a
-                    href={`https://domains.squarespace.com/search?domain=${encodeURIComponent(item.domain)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full mt-2 py-2 px-3 bg-slate-800 hover:bg-emerald-600 hover:text-white text-emerald-400 font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <span>Check Availability</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                  <div className="space-y-2 pt-2">
+                    {/* Primary Button matching selected registrar */}
+                    <a
+                      href={currentRegistrar.getUrl(item.domain)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`w-full py-2 px-3 font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm ${currentRegistrar.buttonClass}`}
+                    >
+                      <span>Check on {currentRegistrar.name}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+
+                    {/* Secondary Cross-Comparison Chips */}
+                    <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                      <span className="text-slate-500 text-[10px]">Compare:</span>
+                      <div className="flex items-center gap-1.5">
+                        {(Object.keys(REGISTRARS) as RegistrarId[])
+                          .filter((r) => r !== selectedRegistrar)
+                          .map((otherId) => {
+                            const other = REGISTRARS[otherId];
+                            return (
+                              <a
+                                key={otherId}
+                                href={other.getUrl(item.domain)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-slate-400 hover:text-white text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700/60 transition-colors"
+                              >
+                                {other.name} ↗
+                              </a>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

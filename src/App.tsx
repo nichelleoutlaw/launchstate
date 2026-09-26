@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Navbar, MilestoneStep, SubTabId } from './components/Navbar';
 import { FormationWizard } from './components/FormationWizard';
 import { DocumentGenerator } from './components/DocumentGenerator';
-import { FormationChecklist } from './components/FormationChecklist';
 import { BrandKit } from './components/BrandKit';
 import { DigitalPresenceHub } from './components/DigitalPresenceHub';
 import { DnsAdvisor } from './components/DnsAdvisor';
@@ -163,7 +162,7 @@ STATE FILING CHECKLIST & NEXT STEPS:
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 min-w-0">
           
           {/* ==================================================================== */}
-          {/* STEP 1: LEGAL FOUNDATION (Entity Setup, Checklist, Documents)       */}
+          {/* STEP 1: LEGAL FOUNDATION (Entity Setup & Documents)                 */}
           {/* ==================================================================== */}
           {activeSubTab === 'entity-setup' && (
             <div className="space-y-8">
@@ -173,46 +172,28 @@ STATE FILING CHECKLIST & NEXT STEPS:
                 onGenerateDocs={() => navigateTo('step1-legal', 'documents')}
                 onGoToTab={(tabId) => {
                   if (tabId === 'documents') navigateTo('step1-legal', 'documents');
-                  else if (tabId === 'checklist') navigateTo('step1-legal', 'checklist');
-                  else if (tabId === 'state-directory') navigateTo('step1-legal', 'checklist');
+                  else navigateTo('step1-legal', 'entity-setup');
+                }}
+              />
+
+              {/* 50-State Statutory Secretary of State Directory & Fee Matrix */}
+              <StateFilingDirectory
+                selectedState={llcData.formationState}
+                onSelectState={(st: UsStateCode) => {
+                  updateLLCData({ formationState: st });
                 }}
               />
             </div>
           )}
 
-        {activeSubTab === 'checklist' && (
-          <div className="space-y-8">
-            <FormationChecklist
+          {activeSubTab === 'documents' && (
+            <DocumentGenerator
               llcData={llcData}
-              stepState={stepState}
-              updateStepState={updateStepState}
-              onNavigateTab={(tabId) => {
-                if (tabId === 'formation') navigateTo('step1-legal', 'entity-setup');
-                else if (tabId === 'documents') navigateTo('step1-legal', 'documents');
-                else if (tabId === 'digital-identity') navigateTo('step2-brand', 'domain-email');
-                else if (tabId === 'funding') navigateTo('step3-capital', 'grants-engine');
-                else navigateTo('step1-legal', 'entity-setup');
-              }}
+              onGoToEin={() => navigateTo('step1-legal', 'documents')}
+              onOpenDisclaimerModal={() => setDisclaimerOpen(true)}
+              onOpenPreviewModal={handleOpenPreview}
             />
-
-            {/* State Filing Directory Quick Access */}
-            <StateFilingDirectory
-              selectedState={llcData.formationState}
-              onSelectState={(st: UsStateCode) => {
-                updateLLCData({ formationState: st });
-              }}
-            />
-          </div>
-        )}
-
-        {activeSubTab === 'documents' && (
-          <DocumentGenerator
-            llcData={llcData}
-            onGoToEin={() => navigateTo('step1-legal', 'checklist')}
-            onOpenDisclaimerModal={() => setDisclaimerOpen(true)}
-            onOpenPreviewModal={handleOpenPreview}
-          />
-        )}
+          )}
 
         {/* ==================================================================== */}
         {/* STEP 2: BRAND & IDENTITY (Brand Kit, Domain & Email, DNS Advisor)    */}
