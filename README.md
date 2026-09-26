@@ -1,7 +1,7 @@
 # LaunchState (`launchstate.io`) 🚀
 ### The Open-Source LLC Formation, Brand Kit & Capital OS
 
-**Live App**: [launchstate.io](https://launchstate.io) • **License**: [MIT](./LICENSE)
+**Live App**: [launchstatellc.me](https://launchstatellc.me) • **License**: [MIT](./LICENSE)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![React 19](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
