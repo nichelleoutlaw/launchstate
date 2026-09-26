@@ -1,4 +1,4 @@
-# LaunchState (`launchstate.io`) 🚀
+# LaunchState (`launchstatellc.me`) 🚀
 ### The Open-Source LLC Formation, Brand Kit & Capital OS
 
 **Live App**: [launchstatellc.me](https://launchstatellc.me) • **License**: [MIT](./LICENSE)
