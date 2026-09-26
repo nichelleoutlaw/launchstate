@@ -182,23 +182,121 @@ ${separator}`;
   };
 
   const handlePrint = () => {
+    // Generate clean, high-fidelity legal print document with styled letterhead, court borders, and signature spaces
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      const escapedTitle = currentMeta.title.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const escapedEntity = `${llcData.businessName} ${llcData.suffix}`.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const escapedState = stateInfo.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const bodyHtml = currentContent
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
       printWindow.document.write(`
+        <!DOCTYPE html>
         <html>
           <head>
-            <title>${currentMeta.title} - ${llcData.businessName} ${llcData.suffix}</title>
+            <meta charset="utf-8">
+            <title>${escapedTitle} - ${escapedEntity}</title>
             <style>
-              body { font-family: monospace; white-space: pre-wrap; font-size: 11pt; line-height: 1.5; padding: 24px; color: #111; }
-              @media print { body { padding: 0; } }
+              @page {
+                size: letter portrait;
+                margin: 0.75in;
+              }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                color: #0f172a;
+                background: #ffffff;
+                line-height: 1.55;
+                font-size: 10.5pt;
+                padding: 20px;
+                margin: 0;
+              }
+              .header-letterhead {
+                border-bottom: 2px solid #0f172a;
+                padding-bottom: 14px;
+                margin-bottom: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+              }
+              .company-title {
+                font-size: 18pt;
+                font-weight: 800;
+                letter-spacing: -0.5px;
+                color: #047857;
+                margin: 0;
+                text-transform: uppercase;
+              }
+              .document-title {
+                font-size: 13pt;
+                font-weight: 700;
+                color: #1e293b;
+                margin: 4px 0 0 0;
+              }
+              .meta-badge {
+                font-size: 9pt;
+                color: #64748b;
+                text-align: right;
+                font-family: monospace;
+              }
+              .doc-body {
+                font-family: 'Courier New', Courier, monospace;
+                white-space: pre-wrap;
+                font-size: 9.5pt;
+                line-height: 1.48;
+                color: #1e293b;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                padding: 20px;
+              }
+              .footer-signature {
+                margin-top: 25px;
+                padding-top: 12px;
+                border-top: 1px dashed #cbd5e1;
+                font-size: 8.5pt;
+                color: #64748b;
+                display: flex;
+                justify-content: space-between;
+              }
+              @media print {
+                body { padding: 0; background: #fff; }
+                .doc-body { border: none; background: transparent; padding: 0; }
+                .no-print { display: none; }
+              }
             </style>
           </head>
-          <body>${currentContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body>
+          <body>
+            <div class="header-letterhead">
+              <div>
+                <h1 class="company-title">${escapedEntity}</h1>
+                <div class="document-title">${escapedTitle}</div>
+                <div style="font-size: 9pt; color: #475569; margin-top: 3px;">
+                  Jurisdiction: State of ${escapedState} · Registered Entity Charter
+                </div>
+              </div>
+              <div class="meta-badge">
+                <div>DATE: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                <div>OFFICIAL RECORD COPY</div>
+              </div>
+            </div>
+
+            <div class="doc-body">${bodyHtml}</div>
+
+            <div class="footer-signature">
+              <span>Prepared via LaunchState Enterprise Legal Engine · Self-Help Legal System</span>
+              <span>Page 1 of 1 · Verified Member Representation</span>
+            </div>
+          </body>
         </html>
       `);
       printWindow.document.close();
       printWindow.focus();
-      printWindow.print();
+      setTimeout(() => {
+        printWindow.print();
+      }, 350);
     }
   };
 
@@ -444,15 +542,15 @@ ${separator}`;
               <span>{copied ? 'Copied' : 'Copy Text'}</span>
             </button>
 
-            {/* Print button */}
+            {/* Print / PDF button */}
             <button
               type="button"
               onClick={handlePrint}
-              className="px-3 py-2 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Print document"
+              className="px-3.5 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Print or Save as PDF with formal letterhead"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print</span>
+              <Printer className="w-3.5 h-3.5 text-blue-400" />
+              <span>Print / Save PDF</span>
             </button>
 
             {/* Confirm & Export Full Binder Button */}

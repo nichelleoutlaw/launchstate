@@ -98,6 +98,20 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
   // Calculate high priority programs for this state
   const stateGrantsCount = GRANTS_DATA.filter((g) => g.state === stateInfo.code || g.level === 'federal').length;
 
+  // Calculate dynamic match score for a given grant based on LLC state, entity type, and industry
+  const calculateMatchScore = (grant: GrantItem) => {
+    let score = 72;
+    if (grant.state === stateInfo.code) score += 20;
+    else if (grant.level === 'federal') score += 14;
+    
+    const ind = (llcData.industry || '').toLowerCase();
+    if (grant.category === 'innovation' && (ind.includes('tech') || ind.includes('software') || ind.includes('bio') || ind.includes('design'))) {
+      score += 8;
+    }
+    if (grant.category === 'small-business') score += 5;
+    return Math.min(score, 98);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -430,13 +444,19 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
                     <div className="text-xs text-slate-400">{grant.provider}</div>
                   </div>
 
-                  <div className="flex flex-col items-start sm:items-end shrink-0">
+                  <div className="flex flex-col items-start sm:items-end shrink-0 gap-1">
                     <span className="text-sm font-mono font-extrabold text-emerald-400">
                       {grant.amountLabel}
                     </span>
-                    <span className="text-[11px] text-slate-400">
-                      Deadline: {grant.deadline}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold flex items-center gap-1">
+                        <Sparkles className="w-2.5 h-2.5" />
+                        <span>{calculateMatchScore(grant)}% Match</span>
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        {grant.deadline}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

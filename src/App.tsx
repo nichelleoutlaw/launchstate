@@ -175,6 +175,12 @@ STATE FILING CHECKLIST & NEXT STEPS:
               onStartStep1={() => navigateTo('step1-legal', 'entity-setup')}
               onOpenAiAdvisor={() => setAiAdvisorOpen(true)}
               onOpenDisclaimerModal={() => setDisclaimerOpen(true)}
+              onLoadSampleBusiness={(sample) => {
+                setLlcData(sample);
+                saveLLCData(sample);
+              }}
+              onNavigateTo={navigateTo}
+              onOpenPreview={() => handleOpenPreview('binder')}
             />
           )}
 
@@ -258,15 +264,17 @@ STATE FILING CHECKLIST & NEXT STEPS:
         )}
       </main>
 
-      {/* Persistent Side Checklist Companion */}
-      <SideChecklist
-        llcData={llcData}
-        stepState={stepState}
-        updateStepState={updateStepState}
-        onNavigate={navigateTo}
-        isOpen={sideChecklistOpen}
-        onToggle={() => setSideChecklistOpen(!sideChecklistOpen)}
-      />
+      {/* Persistent Side Checklist Companion (active during formation steps, hidden on homepage) */}
+      {activeMilestone !== 'overview' && (
+        <SideChecklist
+          llcData={llcData}
+          stepState={stepState}
+          updateStepState={updateStepState}
+          onNavigate={navigateTo}
+          isOpen={sideChecklistOpen}
+          onToggle={() => setSideChecklistOpen(!sideChecklistOpen)}
+        />
+      )}
     </div>
 
       {/* Persistent Legal Notice & Disclaimer Banner */}

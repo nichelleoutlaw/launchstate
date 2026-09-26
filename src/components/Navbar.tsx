@@ -240,8 +240,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* Toggle Side Checklist Button */}
-            {onToggleSideChecklist && (
+            {/* Toggle Side Checklist Button (hidden on overview homepage) */}
+            {onToggleSideChecklist && activeMilestone !== 'overview' && (
               <button
                 onClick={onToggleSideChecklist}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${

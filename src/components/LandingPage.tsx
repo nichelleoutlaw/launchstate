@@ -16,16 +16,25 @@ import {
   Zap,
   HelpCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  BookmarkCheck,
+  Compass,
+  FileCheck,
+  Coins
 } from 'lucide-react';
 import { UsStateCode, LLCFormData } from '../types';
+import { MilestoneStep, SubTabId } from './Navbar';
 import { STATES_DATA } from '../data/statesData';
+import { SAMPLE_PRESET_BUSINESSES } from '../utils/storage';
 
 interface LandingPageProps {
   llcData: LLCFormData;
   onStartStep1: () => void;
   onOpenAiAdvisor: () => void;
   onOpenDisclaimerModal: () => void;
+  onLoadSampleBusiness?: (sampleData: LLCFormData) => void;
+  onNavigateTo?: (milestone: MilestoneStep, subTab: SubTabId) => void;
+  onOpenPreview?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -33,6 +42,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onStartStep1,
   onOpenAiAdvisor,
   onOpenDisclaimerModal,
+  onLoadSampleBusiness,
+  onNavigateTo,
+  onOpenPreview,
 }) => {
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const selectedState = STATES_DATA[llcData.formationState] || STATES_DATA['TX'];
@@ -150,10 +162,50 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Sparkles className="w-4 h-4 text-emerald-400" />
               <span>Consult Gemini AI Advisor</span>
             </button>
+
+            {onOpenPreview && (
+              <button
+                onClick={onOpenPreview}
+                className="px-5 py-4 bg-slate-800/80 hover:bg-slate-750 text-slate-300 hover:text-white font-medium text-sm rounded-xl border border-slate-700/80 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                title="Instant legal document preview"
+              >
+                <FileCheck className="w-4 h-4 text-blue-400" />
+                <span>Preview Legal Binder</span>
+              </button>
+            )}
           </div>
 
+          {/* Quick Test Drive / Demo Presets Bar */}
+          {onLoadSampleBusiness && (
+            <div className="pt-3 pb-1 border-t border-slate-800/80">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-slate-400 flex items-center gap-1.5 font-medium text-[11px]">
+                  <BookmarkCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>1-Click Showcase Demo:</span>
+                </span>
+                {SAMPLE_PRESET_BUSINESSES.map((preset) => {
+                  const isCurrent = llcData.businessName === preset.data.businessName;
+                  return (
+                    <button
+                      key={preset.id}
+                      onClick={() => onLoadSampleBusiness(preset.data)}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isCurrent
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm'
+                          : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border-slate-700/80 hover:border-slate-600'
+                      }`}
+                    >
+                      <span>{preset.data.businessName}</span>
+                      <span className="text-[10px] font-mono text-slate-400">({preset.data.formationState})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Micro stats banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-slate-800/80 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-800/80 text-xs">
             <div>
               <div className="font-mono font-bold text-lg text-white">50 States</div>
               <div className="text-slate-400 text-[11px]">Direct Secretary Portals</div>
@@ -169,6 +221,117 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div>
               <div className="font-mono font-bold text-lg text-amber-400">Gemini 3.8</div>
               <div className="text-slate-400 text-[11px]">AI Grounded Intelligence</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive Live Entity Progress Tracker Card */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold">
+              <Compass className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold">Active Entity Workspace</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                  {selectedState.name} ({selectedState.code})
+                </span>
+              </div>
+              <div className="text-base font-bold text-white flex items-center gap-2">
+                <span>{llcData.businessName} {llcData.suffix}</span>
+                <span className="text-xs font-normal text-slate-400 hidden sm:inline">· {llcData.industry}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {onNavigateTo && (
+              <button
+                onClick={() => onNavigateTo('step1-legal', 'documents')}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg text-xs font-medium border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-400" />
+                <span>Generated Legal Documents</span>
+              </button>
+            )}
+            {onNavigateTo && (
+              <button
+                onClick={() => onNavigateTo('step3-capital', 'grants-engine')}
+                className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-lg text-xs font-medium border border-emerald-500/40 transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <Coins className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Qualified Grants</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 4 Interactive Phase Checkpoints */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
+          <div 
+            onClick={() => onNavigateTo?.('step1-legal', 'entity-setup')}
+            className="p-3 bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-[10px] font-mono text-slate-400 uppercase">Phase 01</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <div className="font-bold text-white text-xs group-hover:text-emerald-300 transition-colors">
+              Statutory Articles of Org
+            </div>
+            <div className="text-[11px] text-slate-400 mt-0.5">
+              ${selectedState.filingFee} State fee · {selectedState.portalName.slice(0, 22)}...
+            </div>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTo?.('step1-legal', 'documents')}
+            className="p-3 bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-[10px] font-mono text-slate-400 uppercase">Phase 02</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <div className="font-bold text-white text-xs group-hover:text-emerald-300 transition-colors">
+              IRS SS-4 & EIN Packet
+            </div>
+            <div className="text-[11px] text-slate-400 mt-0.5">
+              Form SS-4 worksheet · Line-by-line audit
+            </div>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTo?.('step2-brand', 'brand-kit')}
+            className="p-3 bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-[10px] font-mono text-slate-400 uppercase">Phase 03</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <div className="font-bold text-white text-xs group-hover:text-emerald-300 transition-colors">
+              Seal, Cards & Brand Kit
+            </div>
+            <div className="text-[11px] text-slate-400 mt-0.5">
+              300 DPI vector business cards & seal
+            </div>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTo?.('step3-capital', 'grants-engine')}
+            className="p-3 bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl transition-all cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-[10px] font-mono text-slate-400 uppercase">Phase 04</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <div className="font-bold text-white text-xs group-hover:text-emerald-300 transition-colors">
+              Banking & Grant Pipeline
+            </div>
+            <div className="text-[11px] text-slate-400 mt-0.5">
+              Mercury/Relay resolutions + Grants
             </div>
           </div>
         </div>
