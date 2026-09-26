@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { LLCFormData } from '../types';
 import { STATES_DATA } from '../data/statesData';
+import { getApiUrl } from '../utils/api';
 import { 
   generateArticlesOfOrganization, 
   generateOperatingAgreement, 
@@ -252,7 +253,7 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
   const handleAiDraftClause = async () => {
     setIsDraftingClause(true);
     try {
-      const res = await fetch('/api/ai/draft-clauses', {
+      const res = await fetch(getApiUrl('/api/ai/draft-clauses'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
