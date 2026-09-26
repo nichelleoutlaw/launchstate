@@ -11,13 +11,16 @@ import {
   CreditCard,
   CheckCircle2,
   ChevronRight,
-  PanelRight
+  PanelRight,
+  Sparkles
 } from 'lucide-react';
 import { LLCFormData, FormationStepState } from '../types';
 
-export type MilestoneStep = 'step1-legal' | 'step2-brand' | 'step3-capital';
+export type MilestoneStep = 'overview' | 'step1-legal' | 'step2-brand' | 'step3-capital';
 
 export type SubTabId = 
+  // Main Overview
+  | 'overview-main'
   // Step 1: Legal Foundation
   | 'entity-setup'
   | 'documents'
@@ -39,6 +42,8 @@ interface NavbarProps {
   onExportAll: () => void;
   sideChecklistOpen?: boolean;
   onToggleSideChecklist?: () => void;
+  onOpenAiAdvisor?: () => void;
+  onGoToOverview?: () => void;
 }
 
 interface MilestoneConfig {
@@ -101,12 +106,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   onExportAll,
   sideChecklistOpen,
   onToggleSideChecklist,
+  onOpenAiAdvisor,
+  onGoToOverview,
 }) => {
   const steps = Object.values(stepState);
   const completedCount = steps.filter(Boolean).length;
   const progressPercent = Math.round((completedCount / steps.length) * 100);
 
-  const activeMilestoneConfig = MILESTONES.find((m) => m.id === activeMilestone) || MILESTONES[0];
+  const activeMilestoneConfig = MILESTONES.find((m) => m.id === activeMilestone);
 
   const handleMilestoneClick = (milestone: MilestoneConfig) => {
     setActiveMilestone(milestone.id);
@@ -126,10 +133,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => {
-                setActiveMilestone('step1-legal');
-                setActiveSubTab('entity-setup');
+                if (onGoToOverview) {
+                  onGoToOverview();
+                } else {
+                  setActiveMilestone('overview');
+                  setActiveSubTab('overview-main');
+                }
               }}
               className="flex items-center gap-2.5 text-left group focus:outline-none cursor-pointer"
+              title="Return to Main Overview Page"
             >
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
                 <Building2 className="w-5 h-5 text-white" />
@@ -150,8 +162,26 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* Stepper Navigation: 3 Clear Milestone Steps (Desktop / Tablet) */}
+          {/* Stepper Navigation: Main Overview + 3 Clear Milestone Steps (Desktop / Tablet) */}
           <nav className="hidden md:flex items-center gap-2 lg:gap-3 bg-slate-950/60 p-1.5 rounded-2xl border border-slate-800">
+            {/* Overview Button */}
+            <button
+              onClick={() => {
+                if (onGoToOverview) {
+                  onGoToOverview();
+                } else {
+                  setActiveMilestone('overview');
+                  setActiveSubTab('overview-main');
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer text-xs font-bold ${
+                activeMilestone === 'overview'
+                  ? 'bg-slate-800 text-emerald-400 shadow-md border border-slate-700 ring-1 ring-emerald-500/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <span>Overview</span>
+            </button>
             {MILESTONES.map((milestone, idx) => {
               const isCurrent = activeMilestone === milestone.id;
               const isPassed = MILESTONES.findIndex((m) => m.id === activeMilestone) > idx;
@@ -229,6 +259,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
+            {/* AI Formation, Tax & Infrastructure Advisor Button */}
+            {onOpenAiAdvisor && (
+              <button
+                onClick={onOpenAiAdvisor}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-emerald-600/30 to-teal-600/30 hover:from-emerald-600/50 hover:to-teal-600/50 text-emerald-300 border border-emerald-500/40 shadow-sm transition-all cursor-pointer"
+                title="Open AI Legal, Tax & Infrastructure Advisor"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                <span className="hidden sm:inline">AI Advisor</span>
+              </button>
+            )}
+
             {/* Export Formation Binder Button */}
             <button
               onClick={onExportAll}
@@ -244,6 +286,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Stepper (Horizontal) */}
         <div className="md:hidden flex items-center justify-between gap-1 py-2 border-t border-slate-800/80 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => {
+              if (onGoToOverview) {
+                onGoToOverview();
+              } else {
+                setActiveMilestone('overview');
+                setActiveSubTab('overview-main');
+              }
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs whitespace-nowrap font-medium rounded-lg transition-colors ${
+              activeMilestone === 'overview'
+                ? 'bg-slate-800 text-emerald-400 border border-slate-700 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <span>Overview</span>
+          </button>
           {MILESTONES.map((milestone) => {
             const isCurrent = activeMilestone === milestone.id;
             return (
@@ -268,38 +327,40 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Sub-Navigation Ribbon (Subtabs for Active Milestone) */}
-        <div className="py-2.5 border-t border-slate-800/80 flex items-center justify-between overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className="text-[11px] font-mono font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline mr-1">
-              Step {activeMilestoneConfig.stepNumber} Views:
-            </span>
+        {activeMilestoneConfig && (
+          <div className="py-2.5 border-t border-slate-800/80 flex items-center justify-between overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[11px] font-mono font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline mr-1">
+                Step {activeMilestoneConfig.stepNumber} Views:
+              </span>
 
-            {activeMilestoneConfig.subTabs.map((subTab) => {
-              const Icon = subTab.icon;
-              const isActive = activeSubTab === subTab.id;
+              {activeMilestoneConfig.subTabs.map((subTab) => {
+                const Icon = subTab.icon;
+                const isActive = activeSubTab === subTab.id;
 
-              return (
-                <button
-                  key={subTab.id}
-                  onClick={() => setActiveSubTab(subTab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
-                  <span>{subTab.label}</span>
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={subTab.id}
+                    onClick={() => setActiveSubTab(subTab.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
+                    <span>{subTab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick Context Indicator */}
+            <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-400">
+              <span>LLC State: <strong className="text-white">{llcData.formationState}</strong></span>
+            </div>
           </div>
-
-          {/* Quick Context Indicator */}
-          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-400">
-            <span>LLC State: <strong className="text-white">{llcData.formationState}</strong></span>
-          </div>
-        </div>
+        )}
       </div>
     </header>
   );

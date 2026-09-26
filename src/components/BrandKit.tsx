@@ -314,14 +314,39 @@ export const BrandKit: React.FC<BrandKitProps> = ({
 
   const brandName = llcData.businessName || 'Vanguard Synergy';
 
-  // Deterministic Slogans
-  const slogans = [
+  // Deterministic & AI Generated Slogans
+  const defaultSlogans = [
     `Building Sustainable Value in ${llcData.industry || 'Commerce'}`,
     `Institutional Excellence. Commercial Velocity.`,
     `Structured for Growth. Protected by Law.`,
     `Precision Operational Solutions for Modern Enterprise`,
     `Next-Generation ${llcData.industry || 'Business'} Infrastructure`
   ];
+  const [slogansList, setSlogansList] = useState<string[]>(defaultSlogans);
+  const [generatingSlogans, setGeneratingSlogans] = useState<boolean>(false);
+
+  const handleGenerateAiSlogans = async () => {
+    setGeneratingSlogans(true);
+    try {
+      const res = await fetch('/api/ai/generate-slogans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: brandName,
+          industry: llcData.industry || 'Commercial Solutions',
+          description: llcData.businessDescription || 'Modern enterprise operations and growth'
+        })
+      });
+      const data = await res.json();
+      if (Array.isArray(data.slogans) && data.slogans.length > 0) {
+        setSlogansList(data.slogans);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGeneratingSlogans(false);
+    }
+  };
 
   const handleCopy = async (text: string, id: string) => {
     try {
@@ -1050,12 +1075,23 @@ export const BrandKit: React.FC<BrandKitProps> = ({
 
           {/* Slogans & Taglines */}
           <div className="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                Brand Taglines & Value Propositions
-              </h3>
-              <span className="text-xs text-slate-400">Click to set active slogan</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  Brand Taglines & Value Propositions
+                </h3>
+                <span className="text-xs text-slate-400">Click to set active slogan for business cards & legal seal</span>
+              </div>
+              <button
+                onClick={handleGenerateAiSlogans}
+                disabled={generatingSlogans}
+                className="px-3 py-1.5 bg-gradient-to-r from-emerald-600/30 to-teal-600/30 hover:from-emerald-600/50 hover:to-teal-600/50 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer self-start sm:self-auto"
+                title="Generate fresh, tailored slogans using Google Gemini"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                <span>{generatingSlogans ? 'Generating...' : '✨ Generate with Gemini AI'}</span>
+              </button>
             </div>
 
             {/* Custom Slogan Input Field */}
@@ -1081,7 +1117,7 @@ export const BrandKit: React.FC<BrandKitProps> = ({
 
             {/* Curated Slogans List */}
             <div className="space-y-2">
-              {slogans.map((slogan, idx) => (
+              {slogansList.map((slogan, idx) => (
                 <div 
                   key={idx}
                   className="p-3 bg-slate-900/80 hover:bg-slate-900 rounded-xl border border-slate-700/80 flex items-center justify-between gap-3 group transition-all"

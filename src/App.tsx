@@ -12,6 +12,8 @@ import { StateFilingDirectory } from './components/StateFilingDirectory';
 import { SideChecklist } from './components/SideChecklist';
 import { LegalDisclaimerModal } from './components/LegalDisclaimerModal';
 import { DocumentPreview, PreviewDocType } from './components/DocumentPreview';
+import { AiAdvisorModal } from './components/AiAdvisorModal';
+import { LandingPage } from './components/LandingPage';
 import { LLCFormData, FormationStepState, UsStateCode, LegalAcknowledgment } from './types';
 import { 
   loadSavedLLCData, 
@@ -27,20 +29,21 @@ import {
   generateDisclaimerAcknowledgment
 } from './utils/documentTemplates';
 import { STATES_DATA } from './data/statesData';
-import { Scale, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Scale, ShieldAlert, CheckCircle2, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [llcData, setLlcData] = useState<LLCFormData>(loadSavedLLCData);
   const [stepState, setStepState] = useState<FormationStepState>(loadSavedStepState);
   
-  // 3 Clear Milestone Steps Navigation
-  const [activeMilestone, setActiveMilestone] = useState<MilestoneStep>('step1-legal');
-  const [activeSubTab, setActiveSubTab] = useState<SubTabId>('entity-setup');
+  // 3 Clear Milestone Steps Navigation + Main Overview Landing Page
+  const [activeMilestone, setActiveMilestone] = useState<MilestoneStep>('overview');
+  const [activeSubTab, setActiveSubTab] = useState<SubTabId>('overview-main');
   const [sideChecklistOpen, setSideChecklistOpen] = useState<boolean>(true);
 
   const [disclaimerOpen, setDisclaimerOpen] = useState<boolean>(false);
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [previewInitialDoc, setPreviewInitialDoc] = useState<PreviewDocType>('binder');
+  const [aiAdvisorOpen, setAiAdvisorOpen] = useState<boolean>(false);
 
   // Persist LLC state changes
   const updateLLCData = (updates: Partial<LLCFormData>) => {
@@ -155,12 +158,26 @@ STATE FILING CHECKLIST & NEXT STEPS:
         onExportAll={() => handleOpenPreview('binder')}
         sideChecklistOpen={sideChecklistOpen}
         onToggleSideChecklist={() => setSideChecklistOpen(!sideChecklistOpen)}
+        onOpenAiAdvisor={() => setAiAdvisorOpen(true)}
+        onGoToOverview={() => navigateTo('overview', 'overview-main')}
       />
 
       {/* Main Content Layout with Persistent Side Checklist */}
       <div className="flex-1 flex w-full relative">
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 min-w-0">
           
+          {/* ==================================================================== */}
+          {/* MAIN PAGE: OVERVIEW, LIMITATIONS & ADVISORIES                       */}
+          {/* ==================================================================== */}
+          {activeMilestone === 'overview' && (
+            <LandingPage
+              llcData={llcData}
+              onStartStep1={() => navigateTo('step1-legal', 'entity-setup')}
+              onOpenAiAdvisor={() => setAiAdvisorOpen(true)}
+              onOpenDisclaimerModal={() => setDisclaimerOpen(true)}
+            />
+          )}
+
           {/* ==================================================================== */}
           {/* STEP 1: LEGAL FOUNDATION (Entity Setup & Documents)                 */}
           {/* ==================================================================== */}
@@ -321,6 +338,27 @@ STATE FILING CHECKLIST & NEXT STEPS:
         initialDoc={previewInitialDoc}
         onConfirmExport={handleExportAll}
       />
+
+      {/* Floating AI Advisor Action Button (Always Accessible) */}
+      <button
+        onClick={() => setAiAdvisorOpen(true)}
+        className="fixed bottom-6 right-6 z-40 px-4 py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-full shadow-2xl shadow-emerald-950/80 flex items-center gap-2.5 border border-emerald-400/40 transition-all hover:scale-105 cursor-pointer group"
+        title="Open Gemini AI Legal, Tax & Infrastructure Advisor"
+      >
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+        </span>
+        <Sparkles className="w-4 h-4 text-emerald-200 group-hover:rotate-12 transition-transform" />
+        <span>Gemini AI Advisor</span>
+      </button>
+
+      {/* Gemini AI Multi-Turn Business & Legal Advisor Modal */}
+      <AiAdvisorModal
+        isOpen={aiAdvisorOpen}
+        onClose={() => setAiAdvisorOpen(false)}
+        llcData={llcData}
+      />
     </div>
   );
-}
+};

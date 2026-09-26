@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
 
@@ -452,6 +452,64 @@ Return ONLY valid JSON.`;
         { alias: `info@${cleanName}.com`, purpose: 'General customer and commercial inquiries' },
         { alias: `support@${cleanName}.com`, purpose: 'Client intake and direct support' },
         { alias: `billing@${cleanName}.com`, purpose: 'Invoicing, banking, and accounting records' }
+      ]
+    });
+  }
+});
+
+// 5. AI Slogan & Brand Tagline Generator
+app.post('/api/ai/generate-slogans', async (req: Request, res: Response) => {
+  try {
+    const { businessName, industry, description } = req.body;
+    const ai = getGeminiClient();
+
+    if (!ai) {
+      return res.status(200).json({
+        slogans: [
+          `Institutional Excellence. Commercial Velocity.`,
+          `Structured for Growth in ${industry || 'Commerce'}.`,
+          `Precision Solutions for Modern Enterprise.`,
+          `Building Sustainable Value in ${industry || 'Business'}.`,
+          `Next-Generation ${industry || 'Commercial'} Infrastructure.`
+        ]
+      });
+    }
+
+    const prompt = `Generate 5 distinctive, punchy, high-impact corporate slogans and brand taglines for:
+- Business: ${businessName || 'Vanguard Synergy'}
+- Industry: ${industry || 'Commercial Solutions'}
+- Purpose: ${description || 'Enterprise services, operations, and growth'}
+
+Return a JSON object:
+{
+  "slogans": [
+    "Slogan 1",
+    "Slogan 2",
+    "Slogan 3",
+    "Slogan 4",
+    "Slogan 5"
+  ]
+}
+Return ONLY valid JSON without markdown fences.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+      },
+    });
+
+    const parsed = JSON.parse(response.text || '{}');
+    res.json(parsed);
+  } catch (error: any) {
+    res.status(200).json({
+      slogans: [
+        `Institutional Excellence. Commercial Velocity.`,
+        `Structured for Growth in ${req.body?.industry || 'Commerce'}.`,
+        `Precision Solutions for Modern Enterprise.`,
+        `Building Sustainable Value in ${req.body?.industry || 'Business'}.`,
+        `Next-Generation ${req.body?.industry || 'Commercial'} Infrastructure.`
       ]
     });
   }

@@ -14,7 +14,10 @@ import {
   ChevronUp,
   ArrowRight,
   ShieldCheck,
-  FileCheck
+  FileCheck,
+  Sparkles,
+  Zap,
+  Target
 } from 'lucide-react';
 import { LLCFormData, GrantItem } from '../types';
 import { GRANTS_DATA } from '../data/grantsData';
@@ -34,7 +37,38 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [expandedGrantId, setExpandedGrantId] = useState<string | null>(null);
 
+  // Gemini AI Grant Strategy State
+  const [aiEvaluation, setAiEvaluation] = useState<any>(null);
+  const [evaluatingAi, setEvaluatingAi] = useState<boolean>(false);
+  const [showAiReport, setShowAiReport] = useState<boolean>(false);
+
   const stateInfo = STATES_DATA[llcData.formationState] || STATES_DATA['TX'];
+
+  const handleRunAiEvaluation = async () => {
+    setEvaluatingAi(true);
+    setShowAiReport(true);
+    try {
+      const res = await fetch('/api/ai/grant-match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: llcData.businessName || 'Vanguard Synergy',
+          state: stateInfo.name,
+          city: llcData.officeCity || 'Local',
+          industry: llcData.industry || 'Technology & Commerce',
+          description: llcData.businessDescription || 'Commercial development and technology enterprise',
+          demographics: ['Small Business Enterprise', 'Founder-Owned LLC'],
+          fundingNeed: '75,000'
+        })
+      });
+      const data = await res.json();
+      setAiEvaluation(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setEvaluatingAi(false);
+    }
+  };
 
   // Filter logic
   const filteredGrants = GRANTS_DATA.filter((grant) => {
@@ -141,6 +175,111 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Gemini AI Grant Evaluation & Strategy Card */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 border border-emerald-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white">Gemini AI Grant Eligibility & Strategy Matcher</h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold">
+                  Google Gemini 3.8 Flash
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                AI evaluation of {llcData.businessName || 'your LLC'} across federal SBIR/STTR, state commerce, and municipal grant programs.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleRunAiEvaluation}
+            disabled={evaluatingAi}
+            className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer shrink-0 self-start sm:self-auto"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{evaluatingAi ? 'Analyzing Profile...' : aiEvaluation ? 'Re-Run AI Assessment' : 'Run AI Grant Assessment'}</span>
+          </button>
+        </div>
+
+        {/* AI Report Drawer */}
+        {showAiReport && (
+          <div className="pt-4 border-t border-slate-800 space-y-4">
+            {evaluatingAi ? (
+              <div className="p-8 text-center space-y-3">
+                <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                <p className="text-xs text-slate-300 font-medium">
+                  Gemini is evaluating state and federal grant databases for {llcData.businessName || 'your enterprise'} in {stateInfo.name}...
+                </p>
+              </div>
+            ) : aiEvaluation ? (
+              <div className="space-y-4">
+                {/* Readiness Score & Executive Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className="p-4 bg-slate-950/80 rounded-xl border border-slate-800 flex flex-col items-center justify-center text-center">
+                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">AI Readiness Score</span>
+                    <div className="text-3xl font-extrabold text-emerald-400 mt-1 font-mono">
+                      {aiEvaluation.readinessScore || 85}<span className="text-xs text-slate-500 font-normal">/100</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-400 font-medium mt-0.5">High Commercial Fit</span>
+                  </div>
+
+                  <div className="md:col-span-3 p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1">
+                    <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Target className="w-3 h-3" />
+                      Executive Grant Strategy
+                    </span>
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      {aiEvaluation.executiveSummary}
+                    </p>
+                  </div>
+                </div>
+
+                {/* High Priority Matched Categories */}
+                {Array.isArray(aiEvaluation.highPriorityGrantTypes) && aiEvaluation.highPriorityGrantTypes.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold text-slate-300 block">Matched Funding Categories:</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                      {aiEvaluation.highPriorityGrantTypes.map((g: any, i: number) => (
+                        <div key={i} className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-white">{g.grantCategory}</span>
+                            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{g.typicalAmount}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-300">{g.whyEligible}</p>
+                          <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1 pt-1 border-t border-slate-800">
+                            <ArrowRight className="w-2.5 h-2.5 text-emerald-400" />
+                            <span>{g.actionStep}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom Application Tips */}
+                {Array.isArray(aiEvaluation.customApplicationTips) && (
+                  <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/20 rounded-xl space-y-1.5">
+                    <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5" />
+                      Gemini Application Strategy Tips:
+                    </span>
+                    <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                      {aiEvaluation.customApplicationTips.map((tip: string, i: number) => (
+                        <li key={i}>{tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* Filter and Search Bar */}

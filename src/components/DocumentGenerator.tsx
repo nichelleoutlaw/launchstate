@@ -249,6 +249,40 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
     setClauseInstruction('');
   };
 
+  const handleAiDraftClause = async () => {
+    setIsDraftingClause(true);
+    try {
+      const res = await fetch('/api/ai/draft-clauses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: llcData.businessName,
+          state: stateInfo.name,
+          industry: llcData.industry || 'Technology & Commerce',
+          clauseType: clauseType,
+          customRequirement: clauseInstruction || 'Standard protective high-growth company language'
+        })
+      });
+      const data = await res.json();
+      if (data.clauseText) {
+        setCustomClauses((prev) => [
+          ...prev,
+          {
+            title: data.clauseTitle || clauseType,
+            text: `${data.clauseText}\n\n[Plain English Founder Summary: ${data.plainEnglishSummary || 'Standard LLC member protective clause'}]`,
+          },
+        ]);
+        setClauseModalOpen(false);
+        setClauseInstruction('');
+      }
+    } catch (e) {
+      console.error(e);
+      handleAddStandardClause();
+    } finally {
+      setIsDraftingClause(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -490,11 +524,11 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           {selectedDoc === 'operating' && (
             <button
               onClick={() => setClauseModalOpen(true)}
-              className="px-2.5 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Add standard protective legal clause"
+              className="px-2.5 py-1.5 text-xs font-semibold text-emerald-300 bg-gradient-to-r from-emerald-600/25 to-teal-600/25 hover:from-emerald-600/35 hover:to-teal-600/35 border border-emerald-500/40 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              title="Add protective legal clause with Gemini AI"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Add Protective Clause</span>
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span>AI Clause Drafter</span>
             </button>
           )}
 
@@ -643,22 +677,33 @@ export const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-3 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => setClauseModalOpen(false)}
-                className="px-3.5 py-1.5 text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
+                className="w-full sm:w-auto px-3.5 py-1.5 text-xs font-medium text-slate-400 hover:text-white cursor-pointer order-3 sm:order-1"
               >
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={handleAddStandardClause}
-                className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <Check className="w-3.5 h-3.5" />
-                <span>Append Clause to Agreement</span>
-              </button>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto order-1 sm:order-2">
+                <button
+                  type="button"
+                  onClick={handleAddStandardClause}
+                  className="flex-1 sm:flex-initial px-3.5 py-2 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
+                >
+                  Use Standard Text
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAiDraftClause}
+                  disabled={isDraftingClause}
+                  className="flex-1 sm:flex-initial px-4 py-2 text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-950/40"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-300 animate-pulse" />
+                  <span>{isDraftingClause ? 'Drafting...' : '✨ Draft with Gemini AI'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
