@@ -18,6 +18,7 @@ import {
   AtSign
 } from 'lucide-react';
 import { LLCFormData } from '../types';
+import { getApiUrl } from '../utils/api';
 
 interface MessageItem {
   id: string;
@@ -94,7 +95,7 @@ What question can I clarify for **${llcData.businessName || 'your business'}** i
     setLoading(true);
 
     try {
-      const res = await fetch('/api/ai/business-advisor', {
+      const res = await fetch(getApiUrl('/api/ai/business-advisor'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

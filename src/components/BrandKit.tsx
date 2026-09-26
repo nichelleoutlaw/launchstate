@@ -27,6 +27,7 @@ import {
   Edit3
 } from 'lucide-react';
 import { LLCFormData } from '../types';
+import { getApiUrl } from '../utils/api';
 
 interface BrandKitProps {
   llcData: LLCFormData;
@@ -328,7 +329,7 @@ export const BrandKit: React.FC<BrandKitProps> = ({
   const handleGenerateAiSlogans = async () => {
     setGeneratingSlogans(true);
     try {
-      const res = await fetch('/api/ai/generate-slogans', {
+      const res = await fetch(getApiUrl('/api/ai/generate-slogans'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

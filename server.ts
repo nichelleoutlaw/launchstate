@@ -2,18 +2,61 @@ import express, { Request, Response } from 'express';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const parsedPort = Number.parseInt(process.env.PORT || '', 10);
+const PORT = Number.isFinite(parsedPort) ? parsedPort : 3000;
+const HOST = '0.0.0.0';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+const configuredFrontendOrigins = (process.env.FRONTEND_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const localDevOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000'];
+const allowedOrigins = new Set([...configuredFrontendOrigins, ...localDevOrigins]);
+
+function isAllowedOrigin(origin?: string): boolean {
+  if (!origin) return true;
+  if (allowedOrigins.has(origin)) return true;
+  if (!IS_PRODUCTION && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    return true;
+  }
+  return false;
+}
+
+app.use((req: Request, res: Response, next) => {
+  const origin = req.headers.origin;
+
+  if (isAllowedOrigin(origin)) {
+    if (origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Vary', 'Origin');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+
+    return next();
+  }
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(403);
+  }
+
+  return res.status(403).json({ error: 'CORS origin not allowed' });
+});
 
 app.use(express.json());
+app.get('/health', (_req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 // Track search grounding quota status to prevent repeated 429 rate limit errors
 let searchGroundingCooldownUntil = 0;
@@ -517,7 +560,7 @@ Return ONLY valid JSON without markdown fences.`;
 
 // Setup Vite middleware in dev or static serving in prod
 async function startServer() {
-  const isDev = process.env.NODE_ENV !== 'production';
+  const isDev = !IS_PRODUCTION;
 
   if (isDev) {
     const vite = await createViteServer({
@@ -525,15 +568,10 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
-    });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`LaunchState server running at http://0.0.0.0:${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`LaunchState server running at http://${HOST}:${PORT}`);
   });
 }
 
