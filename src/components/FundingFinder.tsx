@@ -22,7 +22,6 @@ import {
 import { LLCFormData, GrantItem } from '../types';
 import { GRANTS_DATA } from '../data/grantsData';
 import { STATES_DATA } from '../data/statesData';
-import { getApiUrl } from '../utils/api';
 
 interface FundingFinderProps {
   llcData: LLCFormData;
@@ -49,7 +48,7 @@ export const FundingFinder: React.FC<FundingFinderProps> = ({
     setEvaluatingAi(true);
     setShowAiReport(true);
     try {
-      const res = await fetch(getApiUrl('/api/ai/grant-match'), {
+      const res = await fetch('/api/ai/grant-match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

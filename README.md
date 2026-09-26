@@ -1,7 +1,7 @@
-# LaunchStateLLC (`launchstatellc.me`) 🚀
+# LaunchState (`launchstate.io`) 🚀
 ### The Open-Source LLC Formation, Brand Kit & Capital OS
 
-**Live App**: [launchstatellc.me](https://launchstatellc.me) • **License**: [MIT](./LICENSE)
+**Live App**: [launchstate.io](https://launchstate.io) • **License**: [MIT](./LICENSE)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](./LICENSE)
 [![React 19](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
@@ -117,64 +117,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### 4. Build for production
 ```bash
 npm run build
-```
-
----
-
-## 🌐 Deployment (Frontend + Backend Split)
-
-### Frontend (GitHub Pages)
-Deploy the Vite `dist` output to GitHub Pages (via GitHub Actions) and host only the React app there.
-
-Set this in the frontend build environment:
-
-```bash
-VITE_API_BASE_URL=https://your-backend-service.onrender.com
-```
-
-This makes frontend API calls target your deployed backend instead of same-origin `/api/*`.
-
-### Backend (Render / Node host)
-This repo includes `render.yaml` for deploying the Express/Gemini API service separately.
-
-Required backend environment variables:
-
-- `GEMINI_API_KEY` (required)
-- `FRONTEND_ORIGIN` (required in production, e.g. `https://launchstatellc.me` or comma-separated allowed origins)
-- `PORT` is provided automatically by Render (you can set it locally for manual runs)
-
-Health check endpoint:
-
-- `GET /health` → `{ "status": "ok" }`
-
-### Connecting frontend ↔ backend
-1. Deploy backend first (example URL: `https://your-backend-service.onrender.com`).
-2. Set frontend `VITE_API_BASE_URL` to that backend URL before building/deploying the frontend.
-3. Set backend `FRONTEND_ORIGIN` to your frontend domain(s), for example:
-   - `https://launchstatellc.me`
-   - `https://nichelleoutlaw.github.io`
-
-Manual platform settings still required:
-- Add `GEMINI_API_KEY` and `FRONTEND_ORIGIN` in your Render dashboard.
-- Add `VITE_API_BASE_URL` in the environment used to build/deploy the GitHub Pages frontend.
-
-### Local development
-Run the app with same-origin API calls (default):
-
-```bash
-npm run dev
-```
-
-Optional `.env` examples for local split testing:
-
-```bash
-# Backend
-GEMINI_API_KEY=your_key
-FRONTEND_ORIGIN=http://localhost:5173
-PORT=3000
-
-# Frontend (optional; leave blank for same-origin in combined dev)
-VITE_API_BASE_URL=http://localhost:3000
 ```
 
 ---
